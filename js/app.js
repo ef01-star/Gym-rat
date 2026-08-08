@@ -246,7 +246,164 @@
 
   /* ---------- vista: storico ---------- */
 
+  /* ---------- correzione di una sessione archiviata ---------- */
+
+  // Le modifiche restano in una copia di lavoro finché non premi Salva, così
+  // Annulla riporta davvero la sessione com'era.
+  var editDraft = null;
+
+  function startEditing(logId) {
+    var log = S.getLog(logId);
+    if (!log) return;
+    var workout = D.getWorkout(log.workoutId);
+    var draft = {
+      logId: logId,
+      unit: S.logUnit(log),
+      note: log.note || '',
+      variant: {},
+      entries: {}
+    };
+
+    workout.exercises.forEach(function (slot) {
+      var variants = D.variantsOf(slot.id);
+      // La variante svolta si deduce da dove stanno davvero le serie: è più
+      // affidabile del campo `variant`, che nelle sessioni vecchie può mancare
+      // o essere sbagliato.
+      var withData = variants.filter(function (id) { return log.entries[id]; });
+      var chosen = withData.length ? withData[0]
+        : ((log.variant && log.variant[slot.id]) || slot.id);
+      draft.variant[slot.id] = chosen;
+
+      variants.forEach(function (id) {
+        if (log.entries[id]) {
+          draft.entries[id] = log.entries[id].map(function (s) {
+            return { weight: s.weight, reps: s.reps };
+          });
+        }
+      });
+      if (!draft.entries[chosen]) draft.entries[chosen] = emptyRows(slot.sets);
+    });
+
+    editDraft = draft;
+  }
+
+  function emptyRows(n) {
+    var rows = [];
+    for (var i = 0; i < n; i++) rows.push({ weight: '', reps: '' });
+    return rows;
+  }
+
+  function saveEditing() {
+    var log = S.getLog(editDraft.logId);
+    var workout = D.getWorkout(log.workoutId);
+    var entries = {};
+    var variant = {};
+
+    workout.exercises.forEach(function (slot) {
+      var vid = editDraft.variant[slot.id];
+      variant[slot.id] = vid;
+      var rows = (editDraft.entries[vid] || []).filter(function (r) {
+        return r.reps !== '' && r.reps !== null && Number(r.reps) > 0;
+      }).map(function (r) {
+        return { weight: Number(r.weight) || 0, reps: Number(r.reps) || 0, done: true };
+      });
+      if (rows.length) entries[vid] = rows;
+    });
+
+    if (!Object.keys(entries).length) {
+      global.alert('Così la sessione resterebbe senza nessuna serie. Se vuoi toglierla del tutto, usa Elimina sessione.');
+      return;
+    }
+
+    S.updateLog(editDraft.logId, {
+      entries: entries,
+      variant: variant,
+      note: editDraft.note,
+      unit: editDraft.unit
+    });
+    editDraft = null;
+    render();
+    global.scrollTo(0, 0);
+  }
+
+  function renderLogEditor() {
+    var log = S.getLog(editDraft.logId);
+    var workout = D.getWorkout(log.workoutId);
+    var u = editDraft.unit;
+
+    var slots = workout.exercises.map(function (slot) {
+      var activeId = editDraft.variant[slot.id];
+      var ex = D.getExercise(activeId);
+      var rows = editDraft.entries[activeId] || [];
+
+      var picker = D.variantsOf(slot.id).map(function (vid) {
+        var v = D.getExercise(vid);
+        var on = vid === activeId;
+        return '<button class="variant-opt' + (on ? ' is-on' : '') + '" data-action="edit-variant" ' +
+          'data-primary="' + esc(slot.id) + '" data-variant="' + esc(vid) + '" ' +
+          'aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(v.name) + '</button>';
+      }).join('');
+
+      var setRows = rows.map(function (row, i) {
+        return '<tr class="set-row">' +
+          '<td class="set-index">' + (i + 1) + '</td>' +
+          '<td><input class="set-input edit-input" type="number" inputmode="decimal" ' +
+            'step="' + (u === 'lb' ? '2.5' : '0.5') + '" min="0" placeholder="' + u + '" ' +
+            'aria-label="Carico serie ' + (i + 1) + '" ' +
+            'data-field="weight" data-ex="' + esc(activeId) + '" data-set="' + i + '" value="' + esc(row.weight) + '"></td>' +
+          '<td><input class="set-input edit-input" type="number" inputmode="numeric" step="1" min="0" ' +
+            'placeholder="rip" aria-label="Ripetizioni serie ' + (i + 1) + '" ' +
+            'data-field="reps" data-ex="' + esc(activeId) + '" data-set="' + i + '" value="' + esc(row.reps) + '"></td>' +
+          '</tr>';
+      }).join('');
+
+      return '<article class="card exercise">' +
+        '<header class="exercise-head"><div><h3>' + esc(ex.name) + '</h3>' +
+        '<p class="badges"><span class="badge">' + esc(ex.group) + '</span>' +
+        '<span class="badge">' + esc(ex.equipment) + '</span></p></div></header>' +
+        '<div class="variant" role="group" aria-label="Quale dei due hai fatto">' + picker + '</div>' +
+        '<table class="sets"><thead><tr><th>#</th><th>Carico (' + esc(u) + ')</th><th>Rip.</th></tr></thead>' +
+        '<tbody>' + setRows + '</tbody></table>' +
+        '<div class="exercise-actions">' +
+          '<button class="btn btn-ghost" data-action="edit-add-set" data-ex="' + esc(activeId) + '">+ Serie</button>' +
+          (rows.length ? '<button class="btn btn-ghost" data-action="edit-remove-set" data-ex="' + esc(activeId) + '">− Serie</button>' : '') +
+        '</div>' +
+        '<p class="footnote">Le righe lasciate vuote non vengono salvate.</p>' +
+        '</article>';
+    }).join('');
+
+    return '<h2 class="view-title">Correggi la sessione</h2>' +
+      '<p class="view-sub">' + esc(workout.name) + ' · ' +
+      esc(fmtDateLong(log.endedAt || log.startedAt)) + '</p>' +
+
+      '<section class="card">' +
+        '<h3>Unità di questa sessione</h3>' +
+        '<p class="card-sub">Cambiala solo se avevi registrato i carichi nell\'unità sbagliata: ' +
+        'i numeri qui sotto restano identici, cambia il modo in cui vengono letti.</p>' +
+        '<div class="variant" role="group" aria-label="Unità della sessione">' +
+          '<button class="variant-opt' + (u === 'kg' ? ' is-on' : '') + '" data-action="edit-unit" ' +
+            'data-unit="kg" aria-pressed="' + (u === 'kg' ? 'true' : 'false') + '">kg</button>' +
+          '<button class="variant-opt' + (u === 'lb' ? ' is-on' : '') + '" data-action="edit-unit" ' +
+            'data-unit="lb" aria-pressed="' + (u === 'lb' ? 'true' : 'false') + '">lb</button>' +
+        '</div>' +
+      '</section>' +
+
+      slots +
+
+      '<section class="card">' +
+        '<h3>Note della sessione</h3>' +
+        '<textarea id="edit-note" rows="4">' + esc(editDraft.note) + '</textarea>' +
+      '</section>' +
+
+      '<div class="session-end">' +
+        '<button class="btn btn-primary btn-lg" data-action="save-edit">Salva le correzioni</button>' +
+        '<button class="btn btn-ghost" data-action="cancel-edit">Annulla</button>' +
+      '</div>';
+  }
+
   function renderHistory() {
+    if (editDraft) return renderLogEditor();
+
     var logs = S.load().logs.slice().reverse();
     if (!logs.length) {
       return '<h2 class="view-title">Storico</h2>' +
@@ -278,7 +435,10 @@
         '</summary>' +
         '<ul class="hist-detail">' + detail + '</ul>' +
         (log.note ? '<p class="hist-note">' + esc(log.note) + '</p>' : '') +
-        '<button class="btn btn-danger-ghost" data-action="delete-log" data-log="' + esc(log.id) + '">Elimina sessione</button>' +
+        '<div class="exercise-actions">' +
+          '<button class="btn btn-ghost" data-action="edit-log" data-log="' + esc(log.id) + '">Correggi</button>' +
+          '<button class="btn btn-danger-ghost" data-action="delete-log" data-log="' + esc(log.id) + '">Elimina sessione</button>' +
+        '</div>' +
         '</details>';
     }).join('');
 
@@ -598,6 +758,66 @@
       return;
     }
 
+    if (action === 'edit-log') {
+      startEditing(btn.getAttribute('data-log'));
+      render();
+      global.scrollTo(0, 0);
+      return;
+    }
+
+    if (action === 'edit-variant') {
+      var slotId = btn.getAttribute('data-primary');
+      var target = btn.getAttribute('data-variant');
+      var previous = editDraft.variant[slotId];
+      editDraft.variant[slotId] = target;
+      if (!editDraft.entries[target]) {
+        // Qui si sta correggendo l'etichetta di un lavoro già svolto: le serie
+        // registrate sono quelle giuste, cambia solo a quale movimento vanno
+        // attribuite. Si portano dietro, invece di far ridigitare tutto.
+        var carried = editDraft.entries[previous];
+        editDraft.entries[target] = carried && carried.length
+          ? carried.map(function (r) { return { weight: r.weight, reps: r.reps }; })
+          : emptyRows(D.getExercise(slotId).sets);
+      }
+      render();
+      return;
+    }
+
+    if (action === 'edit-add-set') {
+      var addTo = editDraft.entries[btn.getAttribute('data-ex')];
+      var lastEdit = addTo[addTo.length - 1];
+      addTo.push({
+        weight: lastEdit ? lastEdit.weight : '',
+        reps: lastEdit ? lastEdit.reps : ''
+      });
+      render();
+      return;
+    }
+
+    if (action === 'edit-remove-set') {
+      var removeFrom = editDraft.entries[btn.getAttribute('data-ex')];
+      if (removeFrom.length) removeFrom.pop();
+      render();
+      return;
+    }
+
+    if (action === 'edit-unit') {
+      editDraft.unit = btn.getAttribute('data-unit');
+      render();
+      return;
+    }
+
+    if (action === 'save-edit') {
+      saveEditing();
+      return;
+    }
+
+    if (action === 'cancel-edit') {
+      editDraft = null;
+      render();
+      return;
+    }
+
     if (action === 'delete-log') {
       if (global.confirm('Eliminare questa sessione dallo storico?')) {
         S.deleteLog(btn.getAttribute('data-log'));
@@ -634,6 +854,20 @@
 
   function onInput(e) {
     var target = e.target;
+
+    // L'editor di una sessione archiviata lavora sulla copia, non su ciò che
+    // è già salvato: niente scritture finché non premi Salva.
+    if (target.classList.contains('edit-input')) {
+      if (!editDraft) return;
+      var draftRow = editDraft.entries[target.getAttribute('data-ex')][Number(target.getAttribute('data-set'))];
+      draftRow[target.getAttribute('data-field')] = target.value;
+      return;
+    }
+
+    if (target.id === 'edit-note') {
+      if (editDraft) editDraft.note = target.value;
+      return;
+    }
 
     if (target.classList.contains('set-input')) {
       var state = S.load();

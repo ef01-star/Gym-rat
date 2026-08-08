@@ -253,6 +253,24 @@
     save();
   }
 
+  function getLog(id) {
+    var logs = load().logs;
+    for (var i = 0; i < logs.length; i++) {
+      if (logs[i].id === id) return logs[i];
+    }
+    return null;
+  }
+
+  // Riscrive una sessione già archiviata: serve quando ci si accorge dopo di
+  // aver sbagliato un carico, o di aver svolto l'altra variante dello slot.
+  function updateLog(id, patch) {
+    var log = getLog(id);
+    if (!log) return null;
+    Object.keys(patch).forEach(function (k) { log[k] = patch[k]; });
+    save();
+    return log;
+  }
+
   /* ---------- statistiche ---------- */
 
   // Il volume è sempre espresso nell'unità attualmente in uso, anche per le
@@ -437,6 +455,8 @@
     discardSession: discardSession,
     finishSession: finishSession,
     deleteLog: deleteLog,
+    getLog: getLog,
+    updateLog: updateLog,
     volumeOfLog: volumeOfLog,
     setsOfLog: setsOfLog,
     durationMin: durationMin,

@@ -26,7 +26,7 @@ Dal telefono, "Aggiungi a schermata Home" la fa comportare come un'app.
 | --- | --- |
 | **Oggi** | Quale sessione tocca, sessioni della settimana, volume, durata media |
 | **Allenati** | La sessione dal vivo: serie, carichi, ripetizioni, cronometro |
-| **Storico** | Ogni allenamento concluso, serie per serie |
+| **Storico** | Ogni allenamento concluso, serie per serie, correggibile a posteriori |
 | **Progressi** | Andamento dei carichi per esercizio, volume per settimana e per gruppo muscolare |
 | **Programma** | La scheda completa con note di esecuzione e alternative |
 
@@ -40,6 +40,11 @@ visibili con quella in corso evidenziata: si vede a colpo d'occhio se stai
 facendo il goblet squat o la leg press. Le due varianti hanno storici separati
 — la leg press non finisce nei progressi del goblet squat — e la seduta
 successiva riparte dalla variante che hai svolto l'ultima volta.
+
+Una sessione già archiviata si corregge da **Storico → Correggi**: carichi,
+ripetizioni, note, unità di misura e quale delle due varianti hai davvero
+svolto. Cambiando variante le serie si spostano sul movimento giusto senza
+doverle ridigitare, e finché non premi Salva lo storico resta com'era.
 
 ## Il programma
 
