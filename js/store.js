@@ -9,14 +9,55 @@
 
   var KEY = 'gymrat.v1';
 
+  var VERSION = 2;
+
   var EMPTY = {
-    version: 1,
-    settings: { unit: 'kg' },
+    version: VERSION,
+    settings: { unit: 'kg', preferredVariant: {} },
     active: null,
     logs: []
   };
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  /* Versione 1 -> 2.
+   *
+   * Nella versione 1 sostituire un esercizio con la sua alternativa cambiava
+   * solo l'etichetta: le serie restavano archiviate sotto l'id dell'esercizio
+   * principale, con un flag `swaps` a lato. I carichi della leg press finivano
+   * quindi nello storico del goblet squat. Qui le serie vengono riassegnate
+   * all'id dell'alternativa, che ora è un esercizio a sé.
+   *
+   * Le sedute in cui l'alternativa è stata fatta senza premere il tasto di
+   * sostituzione non lasciano traccia del cambio e restano dove sono: non c'è
+   * modo di indovinarle. */
+  function migrateSession(session) {
+    if (!session || !session.swaps) return session;
+    var variant = session.variant || {};
+    Object.keys(session.swaps).forEach(function (primaryId) {
+      if (!session.swaps[primaryId]) return;
+      var ex = global.GymData.getExercise(primaryId);
+      if (!ex || !ex.alt) return;
+      var altId = ex.alt.id;
+      variant[primaryId] = altId;
+      if (session.entries[primaryId] && !session.entries[altId]) {
+        session.entries[altId] = session.entries[primaryId];
+        delete session.entries[primaryId];
+      }
+    });
+    session.variant = variant;
+    delete session.swaps;
+    return session;
+  }
+
+  function migrate(s) {
+    if (s.version === VERSION) return s;
+    s.logs.forEach(migrateSession);
+    migrateSession(s.active);
+    if (!s.settings.preferredVariant) s.settings.preferredVariant = {};
+    s.version = VERSION;
+    return s;
+  }
 
   var state = null;
 
@@ -30,7 +71,9 @@
     }
     if (!state.logs) state.logs = [];
     if (!state.settings) state.settings = { unit: 'kg' };
+    if (!state.settings.preferredVariant) state.settings.preferredVariant = {};
     if (typeof state.active === 'undefined') state.active = null;
+    migrate(state);
     return state;
   }
 
@@ -54,41 +97,107 @@
     return null;
   }
 
-  // Ultima prestazione registrata per un esercizio, in qualunque sessione.
-  function lastSetsFor(exerciseId) {
+  /* ---------- unità di misura ---------- */
+
+  var KG_TO_LB = 2.2046226218;
+
+  function unit() { return load().settings.unit || 'kg'; }
+
+  function convert(value, from, to) {
+    var v = Number(value);
+    if (!v || from === to) return v || 0;
+    return from === 'kg' ? v * KG_TO_LB : v / KG_TO_LB;
+  }
+
+  // Arrotonda al più piccolo incremento realistico: mezzo chilo, oppure due
+  // libbre e mezzo, che è il salto tipico dei dischi e dei manubri americani.
+  function roundLoad(value, toUnit) {
+    var step = toUnit === 'lb' ? 2.5 : 0.5;
+    return Math.round(Number(value) / step) * step;
+  }
+
+  function logUnit(log) { return log.unit || 'kg'; }
+
+  /* ---------- storico per esercizio ---------- */
+
+  // Ultima prestazione registrata per un esercizio, in qualunque sessione,
+  // convertita nell'unità attualmente in uso.
+  function lastSetsFor(exerciseId, targetUnit) {
+    var to = targetUnit || unit();
     var logs = load().logs;
     for (var i = logs.length - 1; i >= 0; i--) {
       var sets = logs[i].entries[exerciseId];
       if (sets && sets.length) {
-        var done = sets.filter(function (s) { return s.done; });
-        if (done.length) return { date: logs[i].endedAt || logs[i].startedAt, sets: done };
+        var from = logUnit(logs[i]);
+        var done = sets.filter(function (s) { return s.done; }).map(function (s) {
+          return {
+            weight: s.weight ? roundLoad(convert(s.weight, from, to), to) : 0,
+            reps: s.reps
+          };
+        });
+        if (done.length) {
+          return { date: logs[i].endedAt || logs[i].startedAt, sets: done, unit: to };
+        }
       }
     }
     return null;
+  }
+
+  // Righe precompilate con quanto fatto l'ultima volta su quello stesso
+  // movimento: se ripeti gli stessi numeri basta spuntare la serie.
+  function blankRows(exerciseId) {
+    var ex = global.GymData.getExercise(exerciseId);
+    var prev = lastSetsFor(exerciseId);
+    var rows = [];
+    for (var i = 0; i < ex.sets; i++) {
+      var p = prev && prev.sets[i] ? prev.sets[i] : (prev ? prev.sets[prev.sets.length - 1] : null);
+      rows.push({ weight: p ? p.weight : '', reps: p ? p.reps : '', done: false });
+    }
+    return rows;
   }
 
   function startSession(workoutId) {
     var s = load();
     var workout = global.GymData.getWorkout(workoutId);
     var entries = {};
+    var variant = {};
+
     workout.exercises.forEach(function (ex) {
-      var prev = lastSetsFor(ex.id);
-      var rows = [];
-      for (var i = 0; i < ex.sets; i++) {
-        var p = prev && prev.sets[i] ? prev.sets[i] : (prev ? prev.sets[prev.sets.length - 1] : null);
-        rows.push({ weight: p ? p.weight : '', reps: p ? p.reps : '', done: false });
-      }
-      entries[ex.id] = rows;
+      // Se l'ultima volta hai fatto l'alternativa, la seduta riparte da quella.
+      var preferred = s.settings.preferredVariant[ex.id];
+      var activeId = (preferred === ex.alt.id) ? preferred : ex.id;
+      variant[ex.id] = activeId;
+      entries[activeId] = blankRows(activeId);
     });
+
     s.active = {
       workoutId: workoutId,
       startedAt: new Date().toISOString(),
+      unit: s.settings.unit || 'kg',
+      variant: variant,
       entries: entries,
-      swaps: {},
       note: ''
     };
     save();
     return s.active;
+  }
+
+  // Passa all'altra variante dello slot. Le righe già compilate della variante
+  // che lasci restano in memoria, così tornare indietro non perde nulla.
+  function swapSlot(primaryId, targetId) {
+    var s = load();
+    if (!s.active) return null;
+    var current = s.active.variant[primaryId] || primaryId;
+    var next = targetId || global.GymData.otherVariant(primaryId, current);
+    if (next === current) return current;
+    s.active.variant[primaryId] = next;
+    if (!s.active.entries[next]) s.active.entries[next] = blankRows(next);
+    save();
+    return next;
+  }
+
+  function activeVariant(session, primaryId) {
+    return (session.variant && session.variant[primaryId]) || primaryId;
   }
 
   function discardSession() {
@@ -99,16 +208,27 @@
   function finishSession() {
     var s = load();
     if (!s.active) return null;
+    var workout = global.GymData.getWorkout(s.active.workoutId);
     var entries = {};
-    Object.keys(s.active.entries).forEach(function (exId) {
-      var done = s.active.entries[exId].filter(function (r) {
+    var variant = {};
+
+    // Si salva soltanto la variante effettivamente svolta in ogni slot: le
+    // righe dell'altra, se ne hai compilate prima di cambiare idea, restano
+    // fuori dallo storico.
+    workout.exercises.forEach(function (ex) {
+      var activeId = activeVariant(s.active, ex.id);
+      variant[ex.id] = activeId;
+      var rows = s.active.entries[activeId] || [];
+      var done = rows.filter(function (r) {
         return r.done && r.reps !== '' && r.reps !== null;
       }).map(function (r) {
-        return { weight: Number(r.weight) || 0, reps: Number(r.reps) || 0 };
+        return { weight: Number(r.weight) || 0, reps: Number(r.reps) || 0, done: true };
       });
-      if (done.length) entries[exId] = done.map(function (r) {
-        return { weight: r.weight, reps: r.reps, done: true };
-      });
+      if (done.length) {
+        entries[activeId] = done;
+        // La prossima seduta ripartirà da questa variante.
+        s.settings.preferredVariant[ex.id] = activeId;
+      }
     });
 
     var log = {
@@ -116,8 +236,9 @@
       workoutId: s.active.workoutId,
       startedAt: s.active.startedAt,
       endedAt: new Date().toISOString(),
+      unit: s.active.unit || s.settings.unit || 'kg',
       entries: entries,
-      swaps: s.active.swaps || {},
+      variant: variant,
       note: s.active.note || ''
     };
     s.logs.push(log);
@@ -134,11 +255,16 @@
 
   /* ---------- statistiche ---------- */
 
-  function volumeOfLog(log) {
+  // Il volume è sempre espresso nell'unità attualmente in uso, anche per le
+  // sedute registrate quando ne era attiva un'altra: altrimenti sommare chili
+  // e libbre darebbe un numero senza significato.
+  function volumeOfLog(log, targetUnit) {
+    var to = targetUnit || unit();
+    var from = logUnit(log);
     var total = 0;
     Object.keys(log.entries).forEach(function (exId) {
       log.entries[exId].forEach(function (set) {
-        total += (Number(set.weight) || 0) * (Number(set.reps) || 0);
+        total += convert(set.weight, from, to) * (Number(set.reps) || 0);
       });
     });
     return total;
@@ -161,14 +287,16 @@
     return weight * (1 + reps / 30);
   }
 
-  function volumeByGroup(log) {
+  function volumeByGroup(log, targetUnit) {
+    var to = targetUnit || unit();
+    var from = logUnit(log);
     var out = {};
     Object.keys(log.entries).forEach(function (exId) {
       var ex = global.GymData.getExercise(exId);
       if (!ex) return;
       var v = 0;
       log.entries[exId].forEach(function (s) {
-        v += (Number(s.weight) || 0) * (Number(s.reps) || 0);
+        v += convert(s.weight, from, to) * (Number(s.reps) || 0);
       });
       out[ex.group] = (out[ex.group] || 0) + v;
     });
@@ -176,14 +304,16 @@
   }
 
   // Serie di punti per un esercizio: carico della serie migliore e 1RM stimato.
-  function progressFor(exerciseId) {
+  function progressFor(exerciseId, targetUnit) {
+    var to = targetUnit || unit();
     return load().logs.filter(function (log) {
       return log.entries[exerciseId] && log.entries[exerciseId].length;
     }).map(function (log) {
       var sets = log.entries[exerciseId];
+      var from = logUnit(log);
       var topWeight = 0, best1RM = 0, volume = 0, topReps = 0;
       sets.forEach(function (s) {
-        var w = Number(s.weight) || 0, r = Number(s.reps) || 0;
+        var w = convert(s.weight, from, to), r = Number(s.reps) || 0;
         volume += w * r;
         if (w > topWeight) { topWeight = w; topReps = r; }
         var e = estimate1RM(w, r);
@@ -263,12 +393,18 @@
     if (!parsed || !Array.isArray(parsed.logs)) {
       throw new Error('Il file non sembra un backup di Gym-rat.');
     }
+    var settings = parsed.settings || {};
     state = {
-      version: 1,
-      settings: parsed.settings || { unit: 'kg' },
+      version: parsed.version || 1,
+      settings: {
+        unit: settings.unit === 'lb' ? 'lb' : 'kg',
+        preferredVariant: settings.preferredVariant || {}
+      },
       active: parsed.active || null,
       logs: parsed.logs
     };
+    // Un backup vecchio va portato al formato corrente prima di essere usato.
+    migrate(state);
     save();
     return state;
   }
@@ -278,12 +414,26 @@
     save();
   }
 
+  function setUnit(u) {
+    var s = load();
+    s.settings.unit = (u === 'lb') ? 'lb' : 'kg';
+    save();
+    return s.settings.unit;
+  }
+
   global.GymStore = {
     load: load,
     save: save,
+    unit: unit,
+    setUnit: setUnit,
+    convert: convert,
+    roundLoad: roundLoad,
+    logUnit: logUnit,
     lastLogFor: lastLogFor,
     lastSetsFor: lastSetsFor,
     startSession: startSession,
+    swapSlot: swapSlot,
+    activeVariant: activeVariant,
     discardSession: discardSession,
     finishSession: finishSession,
     deleteLog: deleteLog,

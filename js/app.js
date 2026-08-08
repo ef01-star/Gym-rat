@@ -52,9 +52,8 @@
     return '';
   }
 
-  function exerciseName(ex, swaps) {
-    return swaps && swaps[ex.id] ? ex.alt : ex.name;
-  }
+  // Unità attualmente in uso: 'kg' oppure 'lb'.
+  function unit() { return S.unit(); }
 
   /* ---------- vista: dashboard ---------- */
 
@@ -99,7 +98,7 @@
         '<span class="pill pill-' + esc(log.workoutId) + '">' + esc(log.workoutId) + '</span>' +
         '<span class="recent-main"><strong>' + esc(w ? w.focus : log.workoutId) + '</strong>' +
         '<span class="muted">' + esc(fmtDateLong(log.endedAt || log.startedAt)) + '</span></span>' +
-        '<span class="recent-meta">' + C.format(S.volumeOfLog(log)) + ' kg' +
+        '<span class="recent-meta">' + C.format(S.volumeOfLog(log)) + ' ' + unit() +
         (dur ? ' · ' + dur + "'" : '') + '</span>' +
         '</li>';
     }).join('');
@@ -108,13 +107,13 @@
       '<div class="stat-grid">' +
         stat('Sessioni totali', logs.length) +
         stat('Questa settimana', weekLogs.length + ' / 3') +
-        stat('Volume settimanale', C.format(weekVolume) + ' <small>kg</small>') +
+        stat('Volume settimanale', C.format(weekVolume) + ' <small>' + unit() + '</small>') +
         stat('Durata media', avgDuration ? avgDuration + " <small>min</small>" : '—') +
       '</div>' +
       '<section class="card">' +
         '<h3>Volume sollevato per settimana</h3>' +
         '<p class="card-sub">Somma di carico × ripetizioni su tutte le serie completate.</p>' +
-        C.bars(weekly, { unit: 'kg', emptyMessage: 'Completa la prima sessione e qui comparirà il grafico.' }) +
+        C.bars(weekly, { unit: unit(), emptyMessage: 'Completa la prima sessione e qui comparirà il grafico.' }) +
       '</section>' +
       (recent
         ? '<section class="card"><h3>Ultime sessioni</h3><ul class="recent">' + recent + '</ul></section>'
@@ -159,66 +158,81 @@
       D.warmup.map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') +
       '</ul></details>';
 
-    var exercises = workout.exercises.map(function (ex) {
-      var rows = active.entries[ex.id] || [];
+    var u = S.unit();
+
+    var exercises = workout.exercises.map(function (slot) {
+      var activeId = S.activeVariant(active, slot.id);
+      var ex = D.getExercise(activeId);
+      var rows = active.entries[activeId] || [];
       var doneCount = rows.filter(function (r) { return r.done; }).length;
-      var prev = S.lastSetsFor(ex.id);
-      var swapped = !!active.swaps[ex.id];
+      var prev = S.lastSetsFor(activeId);
 
       var prevText = prev
         ? 'Ultima volta (' + fmtDate(prev.date) + '): ' + prev.sets.map(function (s) {
             return (s.weight ? s.weight + '×' : '') + s.reps;
-          }).join(', ')
-        : 'Prima volta su questo esercizio: parti leggero e trova il carico.';
+          }).join(', ') + (prev.sets.some(function (s) { return s.weight; }) ? ' ' + u : '')
+        : 'Prima volta su questo movimento: parti leggero e trova il carico.';
+
+      // Le due varianti sono sempre entrambe visibili, con quella in corso
+      // evidenziata: un tasto "Usa Dead bug" non dice se stai facendo il plank
+      // o il dead bug, e a fine seduta non te lo ricordi più.
+      var variantPicker = D.variantsOf(slot.id).map(function (vid) {
+        var v = D.getExercise(vid);
+        var on = vid === activeId;
+        return '<button class="variant-opt' + (on ? ' is-on' : '') + '" data-action="pick-variant" ' +
+          'data-primary="' + esc(slot.id) + '" data-variant="' + esc(vid) + '" ' +
+          'aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(v.name) + '</button>';
+      }).join('');
 
       var setRows = rows.map(function (row, i) {
-        return '<tr class="set-row' + (row.done ? ' is-done' : '') + '" data-ex="' + esc(ex.id) + '" data-set="' + i + '">' +
+        return '<tr class="set-row' + (row.done ? ' is-done' : '') + '" data-ex="' + esc(activeId) + '" data-set="' + i + '">' +
           '<td class="set-index">' + (i + 1) + '</td>' +
-          '<td><input class="set-input" type="number" inputmode="decimal" step="0.5" min="0" ' +
-            'aria-label="Carico serie ' + (i + 1) + '" placeholder="kg" ' +
-            'data-field="weight" data-ex="' + esc(ex.id) + '" data-set="' + i + '" value="' + esc(row.weight) + '"></td>' +
+          '<td><input class="set-input" type="number" inputmode="decimal" step="' + (u === 'lb' ? '2.5' : '0.5') + '" min="0" ' +
+            'aria-label="Carico serie ' + (i + 1) + ' in ' + u + '" placeholder="' + u + '" ' +
+            'data-field="weight" data-ex="' + esc(activeId) + '" data-set="' + i + '" value="' + esc(row.weight) + '"></td>' +
           '<td><input class="set-input" type="number" inputmode="numeric" step="1" min="0" ' +
             'aria-label="Ripetizioni serie ' + (i + 1) + '" placeholder="rip" ' +
-            'data-field="reps" data-ex="' + esc(ex.id) + '" data-set="' + i + '" value="' + esc(row.reps) + '"></td>' +
-          '<td><button class="check" data-action="toggle-set" data-ex="' + esc(ex.id) + '" data-set="' + i + '" ' +
+            'data-field="reps" data-ex="' + esc(activeId) + '" data-set="' + i + '" value="' + esc(row.reps) + '"></td>' +
+          '<td><button class="check" data-action="toggle-set" data-ex="' + esc(activeId) + '" data-set="' + i + '" ' +
             'aria-pressed="' + (row.done ? 'true' : 'false') + '" title="Segna la serie come completata">✓</button></td>' +
           '</tr>';
       }).join('');
 
-      return '<article class="card exercise' + (doneCount === rows.length && rows.length ? ' is-complete' : '') + '" data-ex-card="' + esc(ex.id) + '">' +
+      return '<article class="card exercise' + (doneCount === rows.length && rows.length ? ' is-complete' : '') + '" data-ex-card="' + esc(activeId) + '">' +
         '<header class="exercise-head">' +
           '<div>' +
-            '<h3>' + esc(exerciseName(ex, active.swaps)) + '</h3>' +
+            '<h3>' + esc(ex.name) + '</h3>' +
             '<p class="badges">' +
               '<span class="badge">' + esc(ex.group) + '</span>' +
-              // Sostituito l'esercizio, l'attrezzo indicato non è più quello.
-              (swapped ? '<span class="badge">alternativa</span>'
-                       : '<span class="badge">' + esc(ex.equipment) + '</span>') +
+              '<span class="badge">' + esc(ex.equipment) + '</span>' +
               shoulderBadge(ex) +
             '</p>' +
           '</div>' +
-          '<span class="progress-count" data-count="' + esc(ex.id) + '">' + doneCount + '/' + rows.length + '</span>' +
+          '<span class="progress-count" data-count="' + esc(activeId) + '">' + doneCount + '/' + rows.length + '</span>' +
         '</header>' +
+        '<div class="variant" role="group" aria-label="Quale dei due stai facendo">' + variantPicker + '</div>' +
         '<p class="target">Obiettivo ' + ex.sets + ' × ' + esc(ex.reps) + ' · recupero ' + fmtRest(ex.restSec) + '</p>' +
         '<p class="prev">' + esc(prevText) + '</p>' +
-        '<table class="sets"><thead><tr><th>#</th><th>Carico</th><th>Rip.</th><th></th></tr></thead>' +
+        '<table class="sets"><thead><tr><th>#</th><th>Carico (' + esc(u) + ')</th><th>Rip.</th><th></th></tr></thead>' +
         '<tbody>' + setRows + '</tbody></table>' +
         '<div class="exercise-actions">' +
-          '<button class="btn btn-ghost" data-action="add-set" data-ex="' + esc(ex.id) + '">+ Serie</button>' +
-          (rows.length > 1 ? '<button class="btn btn-ghost" data-action="remove-set" data-ex="' + esc(ex.id) + '">− Serie</button>' : '') +
-          '<button class="btn btn-ghost" data-action="swap" data-ex="' + esc(ex.id) + '">' +
-            (swapped ? 'Torna a ' + esc(ex.name) : 'Usa ' + esc(ex.alt)) + '</button>' +
+          '<button class="btn btn-ghost" data-action="add-set" data-ex="' + esc(activeId) + '">+ Serie</button>' +
+          (rows.length > 1 ? '<button class="btn btn-ghost" data-action="remove-set" data-ex="' + esc(activeId) + '">− Serie</button>' : '') +
         '</div>' +
         '<details class="note"><summary>Come eseguirlo</summary><p>' + esc(ex.note) + '</p></details>' +
         '</article>';
     }).join('');
+
+    var cooldown = '<details class="card warmup"><summary>Defaticamento <span class="muted">(a fine seduta)</span></summary><ul>' +
+      D.cooldown.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') +
+      '</ul></details>';
 
     return '<div class="session-bar">' +
         '<div><span class="pill pill-' + esc(workout.id) + '">' + esc(workout.id) + '</span> ' +
         '<strong>' + esc(workout.focus) + '</strong></div>' +
         '<div class="session-timer" id="elapsed">0:00</div>' +
       '</div>' +
-      warmup + exercises +
+      warmup + exercises + cooldown +
       '<section class="card">' +
         '<h3>Note della sessione</h3>' +
         '<textarea id="session-note" rows="3" placeholder="Come è andata? La spalla destra si è fatta sentire?">' +
@@ -243,12 +257,15 @@
     var items = logs.map(function (log) {
       var w = D.getWorkout(log.workoutId);
       var dur = S.durationMin(log);
+      // Le serie si mostrano come le hai registrate, nell'unità di allora: il
+      // totale in cima è invece convertito, per poter confrontare le sedute.
+      var logUnit = S.logUnit(log);
       var detail = Object.keys(log.entries).map(function (exId) {
         var ex = D.getExercise(exId);
         var sets = log.entries[exId].map(function (s) {
-          return '<span class="set-chip">' + (s.weight ? esc(s.weight) + ' kg × ' : '') + esc(s.reps) + '</span>';
+          return '<span class="set-chip">' + (s.weight ? esc(s.weight) + ' ' + esc(logUnit) + ' × ' : '') + esc(s.reps) + '</span>';
         }).join('');
-        return '<li><span class="hist-ex">' + esc(ex ? exerciseName(ex, log.swaps) : exId) + '</span>' +
+        return '<li><span class="hist-ex">' + esc(ex ? ex.name : exId) + '</span>' +
           '<span class="hist-sets">' + sets + '</span></li>';
       }).join('');
 
@@ -256,7 +273,7 @@
         '<summary>' +
           '<span class="pill pill-' + esc(log.workoutId) + '">' + esc(log.workoutId) + '</span>' +
           '<span class="hist-main"><strong>' + esc(fmtDateLong(log.endedAt || log.startedAt)) + '</strong>' +
-          '<span class="muted">' + C.format(S.volumeOfLog(log)) + ' kg · ' + S.setsOfLog(log) + ' serie' +
+          '<span class="muted">' + C.format(S.volumeOfLog(log)) + ' ' + unit() + ' · ' + S.setsOfLog(log) + ' serie' +
           (dur ? ' · ' + dur + ' min' : '') + '</span></span>' +
         '</summary>' +
         '<ul class="hist-detail">' + detail + '</ul>' +
@@ -296,7 +313,7 @@
       var chart = C.line([
         { name: 'Carico serie migliore', color: 'var(--accent)', points: points.map(function (p) { return p.topWeight || null; }) },
         { name: 'Massimale stimato', color: 'var(--accent-2)', points: points.map(function (p) { return p.oneRM ? Math.round(p.oneRM * 10) / 10 : null; }) }
-      ], labels, { unit: 'kg' });
+      ], labels, { unit: unit() });
 
       var best = points.reduce(function (a, p) { return p.topWeight > a ? p.topWeight : a; }, 0);
       var first = points[0], last = points[points.length - 1];
@@ -310,9 +327,9 @@
               esc(e.name) + '</option>';
           }).join('') +
         '</select>' +
-        '<p class="card-sub">' + esc(ex.name) + ' · record ' + C.format(best) + ' kg' +
+        '<p class="card-sub">' + esc(ex.name) + ' · record ' + C.format(best) + ' ' + unit() +
         (points.length > 1
-          ? ' · ' + (delta >= 0 ? '+' : '') + C.format(delta) + ' kg dalla prima volta'
+          ? ' · ' + (delta >= 0 ? '+' : '') + C.format(delta) + ' ' + unit() + ' dalla prima volta'
           : '') + '</p>' +
         chart +
         '<p class="footnote">Il massimale stimato usa la formula di Epley e viene calcolato solo sotto le 12 ripetizioni, dove ha ancora senso.</p>' +
@@ -338,12 +355,12 @@
       '<section class="card">' +
         '<h3>Volume per settimana</h3>' +
         '<p class="card-sub">Ultime 12 settimane. Una curva che sale piano è esattamente quello che serve.</p>' +
-        C.bars(weekly, { unit: 'kg' }) +
+        C.bars(weekly, { unit: unit() }) +
       '</section>' +
       '<section class="card">' +
         '<h3>Distribuzione per gruppo muscolare</h3>' +
         '<p class="card-sub">Ultime 4 settimane. Utile per accorgersi se un gruppo sta restando indietro.</p>' +
-        C.bars(groupItems, { unit: 'kg', color: 'var(--accent-2)' }) +
+        C.bars(groupItems, { unit: unit(), color: 'var(--accent-2)' }) +
         '<p class="footnote">Gli esercizi a corpo libero (plank, hollow hold) pesano poco in questo grafico: il volume è calcolato sul carico esterno.</p>' +
       '</section>';
   }
@@ -397,6 +414,12 @@
       workouts +
 
       '<section class="card">' +
+        '<h3>Defaticamento</h3>' +
+        '<p class="card-sub">Uguale per tutte e tre le sedute.</p>' +
+        '<ul class="plain">' + D.cooldown.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' +
+      '</section>' +
+
+      '<section class="card">' +
         '<h3>Come aumentare i carichi</h3>' +
         '<ul class="plain">' + D.progression.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' +
       '</section>';
@@ -406,7 +429,21 @@
 
   function renderData() {
     var state = S.load();
+    var u = S.unit();
     return '<h2 class="view-title">Dati</h2>' +
+      '<section class="card">' +
+        '<h3>Unità di misura</h3>' +
+        '<p>Quella in cui inserisci i carichi durante la seduta. Ogni sessione conserva ' +
+        'l\'unità con cui è stata registrata, quindi cambiare qui non falsa lo storico: ' +
+        'le sedute vecchie restano come le hai scritte e i totali vengono convertiti.</p>' +
+        '<div class="variant" role="group" aria-label="Unità di misura">' +
+          '<button class="variant-opt' + (u === 'kg' ? ' is-on' : '') + '" data-action="set-unit" ' +
+            'data-unit="kg" aria-pressed="' + (u === 'kg' ? 'true' : 'false') + '">Chilogrammi (kg)</button>' +
+          '<button class="variant-opt' + (u === 'lb' ? ' is-on' : '') + '" data-action="set-unit" ' +
+            'data-unit="lb" aria-pressed="' + (u === 'lb' ? 'true' : 'false') + '">Libbre (lb)</button>' +
+        '</div>' +
+        (state.active ? '<p class="footnote">C\'è una sessione in corso: potrai cambiare unità dopo averla chiusa.</p>' : '') +
+      '</section>' +
       '<section class="card">' +
         '<h3>Dove finiscono i tuoi allenamenti</h3>' +
         '<p>Tutto è salvato dentro questo browser, su questo dispositivo. Non esiste un server e non serve ' +
@@ -533,10 +570,8 @@
       return;
     }
 
-    if (action === 'swap') {
-      var swapId = btn.getAttribute('data-ex');
-      state.active.swaps[swapId] = !state.active.swaps[swapId];
-      S.save();
+    if (action === 'pick-variant') {
+      S.swapSlot(btn.getAttribute('data-primary'), btn.getAttribute('data-variant'));
       render();
       return;
     }
@@ -568,6 +603,18 @@
         S.deleteLog(btn.getAttribute('data-log'));
         render();
       }
+      return;
+    }
+
+    if (action === 'set-unit') {
+      // A seduta aperta i carichi già inseriti sono nell'unità di partenza:
+      // cambiarla a metà strada renderebbe ambigui i numeri sullo schermo.
+      if (state.active) {
+        global.alert('Chiudi prima la sessione in corso: cambiare unità adesso renderebbe ambigui i carichi già inseriti.');
+        return;
+      }
+      S.setUnit(btn.getAttribute('data-unit'));
+      render();
       return;
     }
 

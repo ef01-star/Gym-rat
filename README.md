@@ -32,9 +32,14 @@ Dal telefono, "Aggiungi a schermata Home" la fa comportare come un'app.
 
 Durante la sessione ogni esercizio arriva già precompilato con i carichi
 dell'ultima volta: se ripeti gli stessi numeri devi solo spuntare la serie.
-Puoi aggiungere o togliere serie al volo e sostituire un esercizio con la sua
-alternativa con un tocco. Se chiudi il browser a metà allenamento, la sessione
-resta aperta e la ritrovi dov'eri.
+Puoi aggiungere o togliere serie al volo. Se chiudi il browser a metà
+allenamento, la sessione resta aperta e la ritrovi dov'eri.
+
+Ogni esercizio ha un'alternativa, e le due possibilità sono sempre entrambe
+visibili con quella in corso evidenziata: si vede a colpo d'occhio se stai
+facendo il goblet squat o la leg press. Le due varianti hanno storici separati
+— la leg press non finisce nei progressi del goblet squat — e la seduta
+successiva riparte dalla variante che hai svolto l'ultima volta.
 
 ## Il programma
 
@@ -45,6 +50,9 @@ corpo, quindi saltare un giorno non significa perdere un gruppo muscolare.
 - **A** — spinta orizzontale e quadricipiti
 - **B** — catena posteriore e tirata
 - **C** — gambe bilaterale e spinta verticale
+
+Ogni seduta si apre con lo stesso riscaldamento e si chiude con 10-15 minuti di
+camminata sul tapis roulant.
 
 La selezione degli esercizi tiene conto di una spalla destra operata alla cuffia
 dei rotatori e al sottospinato: le spinte partono da manubri e cavi, il lento
@@ -71,6 +79,11 @@ server e non serve un account, ma vuol dire anche che:
 
 Dalla sezione **Dati** si esporta un backup JSON e lo si reimporta altrove: è
 anche il modo per allineare telefono e computer.
+
+Sempre da **Dati** si sceglie l'unità di misura, chili o libbre. Ogni sessione
+conserva l'unità con cui è stata registrata, quindi cambiarla non riscrive il
+passato: lo storico mostra i carichi come li hai inseriti, mentre volumi,
+grafici e carichi precompilati vengono convertiti nell'unità in uso.
 
 ## Struttura
 
