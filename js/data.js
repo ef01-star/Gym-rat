@@ -1,14 +1,19 @@
 /* Gym-rat — Programma di allenamento
  *
- * Full body A/B/C, 3 sedute a settimana, 60-90 minuti.
+ * Full body A/B/C, 3 sedute a settimana, circa un'ora l'una.
  * Selezione esercizi orientata alla spalla destra operata (cuffia dei rotatori
  * + sottospinato): priorità a manubri e cavi, presa neutra sulle spinte
- * verticali, nessuna trazione dietro la nuca, lavoro di cuffia in ogni
- * riscaldamento.
+ * verticali, nessuna trazione dietro la nuca, lavoro di cuffia in apertura.
  *
  * shoulder: 'safe'    -> nessuna attenzione particolare
  *           'caution' -> tenere d'occhio la spalla destra, vedi note
- *           'rehab'   -> esercizio specifico per la cuffia, carico basso
+ *           'rehab'   -> lavoro specifico per la cuffia, carico basso
+ *
+ * alts: gli altri attrezzi con cui si può svolgere lo stesso slot. Ognuno ha
+ * un id proprio e quindi uno storico separato: la shoulder press a macchina e
+ * il lento con manubri non sono lo stesso esercizio e i loro carichi non si
+ * confrontano. Dove l'id coincide con un esercizio già in scheda le due storie
+ * confluiscono, perché è davvero lo stesso movimento.
  */
 (function (global) {
   'use strict';
@@ -17,8 +22,7 @@
     'Cardio facile 5 minuti (bike, vogatore o tapis roulant)',
     'Mobilità toracica: cat-camel 8 + rotazioni toraciche 8 per lato',
     'Band pull-apart 2 × 15',
-    'Extrarotazioni con elastico 2 × 15 per lato (spalla destra senza fretta)',
-    '1-2 serie di avvicinamento sul primo esercizio con carico, carico leggero'
+    'Serie di avvicinamento sul primo esercizio pesante: 2 in genere, 3-4 sullo squat'
   ];
 
   var COOLDOWN = [
@@ -39,8 +43,22 @@
           equipment: 'cavi',
           sets: 2, reps: '15 per lato', restSec: 45,
           shoulder: 'rehab',
-          alt: { id: 'extrarotazioni-elastico', name: 'Extrarotazioni con elastico', equipment: 'corpo libero', shoulder: 'rehab' },
-          note: 'Apre la seduta: serve ad attivare la cuffia prima di caricare, non è un esercizio di forza. Gomito bloccato al fianco, movimento lento, carico basso (intorno ai 5 kg per lato).'
+          alts: [
+            { id: 'extrarotazioni-elastico', name: 'Extrarotazioni con elastico', equipment: 'corpo libero', shoulder: 'rehab' }
+          ],
+          note: 'Apre la seduta: attiva la cuffia prima di caricare, non è un esercizio di forza. Gomito bloccato al fianco, movimento lento, carico basso.'
+        },
+        {
+          id: 'intrarotazioni',
+          name: 'Intrarotazioni ai cavi',
+          group: 'spalle',
+          equipment: 'cavi',
+          sets: 2, reps: '15 per lato', restSec: 45,
+          shoulder: 'rehab',
+          alts: [
+            { id: 'intrarotazioni-elastico', name: 'Intrarotazioni con elastico', equipment: 'corpo libero', shoulder: 'rehab' }
+          ],
+          note: 'Cavo all\'altezza del fianco, gomito bloccato al fianco, porti l\'avambraccio verso l\'ombelico. È la rotazione interna: completa il lavoro delle extrarotazioni, non lo sostituisce. Anche qui carico basso e movimento controllato.'
         },
         {
           id: 'goblet-squat',
@@ -49,7 +67,10 @@
           equipment: 'manubri',
           sets: 3, reps: '8-12', restSec: 120,
           shoulder: 'safe',
-          alt: { id: 'leg-press', name: 'Leg press', equipment: 'macchine' },
+          alts: [
+            { id: 'leg-press', name: 'Leg press', equipment: 'macchine' },
+            { id: 'hack-squat', name: 'Hack squat', equipment: 'macchine' }
+          ],
           note: 'Scendi finché riesci a tenere la schiena neutra. Il manubrio appoggiato al petto, non sospeso sulle braccia.'
         },
         {
@@ -59,17 +80,21 @@
           equipment: 'manubri',
           sets: 3, reps: '8-12', restSec: 150,
           shoulder: 'caution',
-          alt: { id: 'chest-press-macchina', name: 'Chest press a macchina', equipment: 'macchine' },
-          note: 'Gomiti a circa 45° dal busto, mai a 90°. Non scendere sotto il piano della panca: fermati quando il braccio è parallelo al pavimento.'
+          alts: [
+            { id: 'chest-press-macchina', name: 'Chest press a macchina', equipment: 'macchine' }
+          ],
+          note: 'Gomiti a circa 45° dal busto, mai a 90°. Non scendere sotto il piano della panca: fermati quando il braccio è parallelo al pavimento. Carico per singolo manubrio.'
         },
         {
           id: 'affondi',
           name: 'Affondi in camminata con manubri',
           group: 'gambe',
           equipment: 'manubri',
-          sets: 2, reps: '10 per gamba', restSec: 120,
+          sets: 2, reps: '10 per gamba', restSec: 105,
           shoulder: 'safe',
-          alt: { id: 'split-squat-bulgaro', name: 'Split squat bulgaro', equipment: 'manubri' },
+          alts: [
+            { id: 'split-squat-bulgaro', name: 'Split squat bulgaro', equipment: 'manubri' }
+          ],
           note: 'Manubri lungo i fianchi, braccia passive. Se lo spazio manca, affondi sul posto.'
         },
         {
@@ -79,37 +104,47 @@
           equipment: 'cavi',
           sets: 3, reps: '10-12', restSec: 120,
           shoulder: 'caution',
-          alt: { id: 'trazioni-assistite-neutra', name: 'Trazioni assistite presa neutra', equipment: 'macchine' },
-          note: 'Presa stretta neutra: è la più tollerata dalla spalla. Tira verso lo sterno, mai dietro la nuca. Tieni il carico conservativo: se in fondo alla trazione senti la spalla invece del dorsale, sei troppo pesante. Meglio 10-12 ripetizioni pulite che un carico che ti fa strappare.'
+          alts: [
+            { id: 'trazioni-assistite-neutra', name: 'Trazioni assistite presa neutra', equipment: 'macchine' }
+          ],
+          note: 'Presa stretta neutra: è la più tollerata dalla spalla. Tira verso lo sterno, mai dietro la nuca. Se la terza serie cala sempre, il carico di partenza è troppo alto: parti più basso e chiudile tutte e tre.'
         },
         {
           id: 'rematore-manubrio',
           name: 'Rematore con manubrio singolo',
           group: 'schiena',
           equipment: 'manubri',
-          sets: 3, reps: '10-12', restSec: 120,
+          sets: 3, reps: '10-12', restSec: 105,
           shoulder: 'safe',
-          alt: { id: 'pulley-neutro', name: 'Pulley basso presa neutra' },
-          note: 'Appoggio su panca. Registra il carico del singolo manubrio.'
+          alts: [
+            { id: 'pulley-neutro', name: 'Pulley basso presa neutra' },
+            { id: 'rematore-appoggio', name: 'Rematore a macchina con appoggio al petto' }
+          ],
+          note: 'Appoggio su panca. Carico del singolo manubrio.'
         },
         {
           id: 'alzate-laterali',
           name: 'Alzate laterali con manubri',
           group: 'spalle',
           equipment: 'manubri',
-          sets: 3, reps: '12-15', restSec: 90,
+          sets: 3, reps: '12-15', restSec: 75,
           shoulder: 'caution',
-          alt: { id: 'alzate-cavo', name: 'Alzate laterali ai cavi' },
-          note: "Fermati intorno agli 80-90°, non oltre la linea delle spalle. Se il destro protesta, tieni un carico più basso a destra: non forzare la simmetria."
+          alts: [
+            { id: 'alzate-cavo', name: 'Alzate laterali ai cavi' }
+          ],
+          note: 'Fermati intorno agli 80-90°, non oltre la linea delle spalle. Se il destro protesta, tieni un carico più basso a destra: non forzare la simmetria. Prima di aggiungere peso arriva a 15 ripetizioni su tutte le serie.'
         },
         {
           id: 'plank',
           name: 'Plank',
           group: 'core',
           equipment: 'corpo libero',
-          sets: 3, reps: '45 secondi', restSec: 60,
+          sets: 2, reps: '45 secondi', restSec: 45,
           shoulder: 'safe',
-          alt: { id: 'dead-bug', name: 'Dead bug', equipment: 'corpo libero' },
+          alts: [
+            { id: 'dead-bug', name: 'Dead bug', equipment: 'corpo libero' },
+            { id: 'plank-laterale', name: 'Plank laterale', equipment: 'corpo libero' }
+          ],
           note: 'Registra i secondi nel campo ripetizioni e lascia il carico a 0.'
         }
       ]
@@ -120,13 +155,27 @@
       focus: 'Catena posteriore & tirata',
       exercises: [
         {
+          id: 'face-pull',
+          name: 'Face pull ai cavi',
+          group: 'spalle',
+          equipment: 'cavi',
+          sets: 2, reps: '15', restSec: 45,
+          shoulder: 'rehab',
+          alts: [
+            { id: 'face-pull-elastico', name: 'Face pull con elastico', equipment: 'corpo libero', shoulder: 'rehab' }
+          ],
+          note: 'In apertura, come le extrarotazioni in A: messo in fondo non lo facevi mai. Cavo all\'altezza degli occhi, gomiti alti, chiudi in extrarotazione. Due serie leggere, è lavoro di cuffia.'
+        },
+        {
           id: 'stacco-rumeno',
           name: 'Stacco rumeno con manubri',
           group: 'gambe',
           equipment: 'manubri',
           sets: 3, reps: '8-10', restSec: 150,
           shoulder: 'safe',
-          alt: { id: 'stacco-rumeno-bilanciere', name: 'Stacco rumeno con bilanciere', equipment: 'bilanciere' },
+          alts: [
+            { id: 'stacco-rumeno-bilanciere', name: 'Stacco rumeno con bilanciere', equipment: 'bilanciere' }
+          ],
           note: 'Manubri vicini alle gambe, ginocchia morbide. Scendi finché senti i femorali, non più in basso.'
         },
         {
@@ -136,7 +185,11 @@
           equipment: 'cavi',
           sets: 3, reps: '10-12', restSec: 120,
           shoulder: 'safe',
-          alt: { id: 'rematore-appoggio', name: 'Rematore con appoggio al petto' },
+          alts: [
+            { id: 'rematore-appoggio', name: 'Rematore a macchina con appoggio al petto' },
+            { id: 'rematore-tbar', name: 'Rematore a T-bar', equipment: 'bilanciere' },
+            { id: 'rematore-manubrio', name: 'Rematore con manubrio singolo' }
+          ],
           note: 'Busto fermo, tira con le scapole prima che con le braccia.'
         },
         {
@@ -146,18 +199,11 @@
           equipment: 'cavi',
           sets: 3, reps: '10-12', restSec: 120,
           shoulder: 'caution',
-          alt: { id: 'panca-manubri', name: 'Panca piana con manubri' },
-          note: "Traiettoria guidata: è la spinta più sicura per la spalla. Regola il sedile in modo che le mani partano all'altezza dello sterno."
-        },
-        {
-          id: 'leg-curl',
-          name: 'Leg curl',
-          group: 'gambe',
-          equipment: 'macchine',
-          sets: 3, reps: '12', restSec: 90,
-          shoulder: 'safe',
-          alt: { id: 'nordic-curl', name: 'Nordic curl assistito', equipment: 'corpo libero' },
-          note: 'Fase negativa lenta, 3 secondi.'
+          alts: [
+            { id: 'panca-manubri', name: 'Panca piana con manubri' },
+            { id: 'chest-press-macchina', name: 'Chest press a macchina' }
+          ],
+          note: 'Traiettoria guidata: è la spinta più sicura per la spalla. Regola il sedile in modo che le mani partano all\'altezza dello sterno. Chiudi con 1-2 ripetizioni in canna, non cercare il cedimento.'
         },
         {
           id: 'lat-supina',
@@ -166,47 +212,59 @@
           equipment: 'cavi',
           sets: 3, reps: '8-10', restSec: 120,
           shoulder: 'safe',
-          alt: { id: 'trazioni-assistite-supina', name: 'Trazioni assistite presa supina', equipment: 'macchine' },
-          note: "Presa alla larghezza delle spalle, tira verso la parte alta dell'addome."
+          alts: [
+            { id: 'trazioni-assistite-supina', name: 'Trazioni assistite presa supina', equipment: 'macchine' },
+            { id: 'lat-neutra', name: 'Lat machine presa neutra' }
+          ],
+          note: 'Presa alla larghezza delle spalle, tira verso la parte alta dell\'addome.'
         },
         {
-          id: 'face-pull',
-          name: 'Face pull ai cavi',
-          group: 'spalle',
-          equipment: 'cavi',
-          sets: 3, reps: '15', restSec: 60,
-          shoulder: 'rehab',
-          alt: { id: 'face-pull-elastico', name: 'Face pull con elastico', equipment: 'corpo libero', shoulder: 'rehab' },
-          note: "Cavo all'altezza degli occhi, gomiti alti, chiudi in extrarotazione. Uno dei movimenti migliori per una spalla operata."
+          id: 'leg-curl',
+          name: 'Leg curl',
+          group: 'gambe',
+          equipment: 'macchine',
+          sets: 2, reps: '12', restSec: 75,
+          shoulder: 'safe',
+          alts: [
+            { id: 'nordic-curl', name: 'Nordic curl assistito', equipment: 'corpo libero' }
+          ],
+          note: 'Due serie bastano: i femorali hanno già lavorato sullo stacco rumeno. Fase negativa lenta, 3 secondi.'
         },
         {
           id: 'curl-manubri',
           name: 'Curl con manubri',
           group: 'braccia',
           equipment: 'manubri',
-          sets: 3, reps: '10-12', restSec: 90,
+          sets: 2, reps: '10-12', restSec: 60,
           shoulder: 'safe',
-          alt: { id: 'curl-cavi', name: 'Curl ai cavi', equipment: 'cavi' },
-          note: 'Registra il carico del singolo manubrio.'
+          alts: [
+            { id: 'curl-cavi', name: 'Curl ai cavi', equipment: 'cavi' }
+          ],
+          note: 'Carico del singolo manubrio. Se vuoi guadagnare tempo, alternalo col calf senza recuperare in mezzo.'
         },
         {
           id: 'calf',
-          name: 'Calf raise',
+          name: 'Calf raise da seduto a macchina',
           group: 'gambe',
           equipment: 'macchine',
-          sets: 3, reps: '15', restSec: 60,
+          sets: 2, reps: '15', restSec: 45,
           shoulder: 'safe',
-          alt: { id: 'calf-manubrio', name: 'Calf raise in piedi con manubrio', equipment: 'manubri' },
-          note: 'Pausa di 1 secondo in alto e in basso.'
+          alts: [
+            { id: 'calf-rack', name: 'Calf raise al rack con bilanciere', equipment: 'bilanciere', shoulder: 'caution' },
+            { id: 'calf-manubrio', name: 'Calf raise in piedi con manubrio', equipment: 'manubri' }
+          ],
+          note: 'Da seduto, ginocchia piegate: lavora soprattutto il soleo. Pausa di 1 secondo in alto e in basso.'
         },
         {
           id: 'pallof',
           name: 'Pallof press',
           group: 'core',
           equipment: 'cavi',
-          sets: 3, reps: '12 per lato', restSec: 60,
+          sets: 2, reps: '12 per lato', restSec: 45,
           shoulder: 'safe',
-          alt: { id: 'plank-laterale', name: 'Plank laterale', equipment: 'corpo libero' },
+          alts: [
+            { id: 'plank-laterale', name: 'Plank laterale', equipment: 'corpo libero' }
+          ],
           note: 'Antirotazione: il busto non deve girare.'
         }
       ]
@@ -223,8 +281,11 @@
           equipment: 'bilanciere',
           sets: 3, reps: '6-10', restSec: 180,
           shoulder: 'caution',
-          alt: { id: 'hack-squat', name: 'Hack squat', equipment: 'macchine' },
-          note: 'Tenere il bilanciere in appoggio richiede extrarotazione. Se la spalla destra tira, allarga la presa, prova un appoggio più basso, oppure passa direttamente a hack squat o leg press.'
+          alts: [
+            { id: 'hack-squat', name: 'Hack squat', equipment: 'macchine' },
+            { id: 'leg-press', name: 'Leg press', equipment: 'macchine' }
+          ],
+          note: 'Mettici 3-4 serie di avvicinamento a carico ridotto: sono riscaldamento, non vanno registrate. Tenere il bilanciere in appoggio richiede extrarotazione: se la spalla destra tira, allarga la presa o passa a hack squat.'
         },
         {
           id: 'panca-inclinata-manubri',
@@ -233,18 +294,23 @@
           equipment: 'manubri',
           sets: 3, reps: '8-12', restSec: 150,
           shoulder: 'caution',
-          alt: { id: 'chest-press-inclinata', name: 'Chest press inclinata a macchina', equipment: 'macchine' },
-          note: 'Inclinazione bassa: 30° bastano. Più si alza lo schienale, più lavoro finisce sulla spalla.'
+          alts: [
+            { id: 'chest-press-inclinata', name: 'Chest press inclinata a macchina', equipment: 'macchine' }
+          ],
+          note: 'Inclinazione bassa: 30° bastano, più si alza lo schienale più lavoro finisce sulla spalla. Carico per singolo manubrio.'
         },
         {
           id: 'rematore-appoggio',
-          name: 'Rematore con appoggio al petto',
+          name: 'Rematore a macchina con appoggio al petto',
           group: 'schiena',
           equipment: 'macchine',
           sets: 3, reps: '8-10', restSec: 120,
           shoulder: 'safe',
-          alt: { id: 'rematore-manubrio', name: 'Rematore con manubrio singolo' },
-          note: "L'appoggio toglie il lavoro alla zona lombare e stabilizza la spalla."
+          alts: [
+            { id: 'rematore-tbar', name: 'Rematore a T-bar', equipment: 'bilanciere' },
+            { id: 'rematore-manubrio', name: 'Rematore con manubrio singolo' }
+          ],
+          note: 'Quella a bracci indipendenti, con l\'appoggio al petto. L\'appoggio toglie il lavoro alla zona lombare e stabilizza la spalla.'
         },
         {
           id: 'lento-manubri-neutro',
@@ -253,17 +319,22 @@
           equipment: 'manubri',
           sets: 3, reps: '8-12', restSec: 150,
           shoulder: 'caution',
-          alt: { id: 'panca-inclinata-45', name: 'Panca inclinata 45° con manubri', equipment: 'manubri', shoulder: 'caution' },
-          note: "Seduto con schienale, presa a martello (palmi che si guardano): riduce il conflitto subacromiale. Non scendere sotto l'altezza del mento. Se compare dolore, sostituisci con panca inclinata a 45-60°."
+          alts: [
+            { id: 'shoulder-press-macchina', name: 'Shoulder press a macchina', equipment: 'macchine' },
+            { id: 'panca-inclinata-45', name: 'Panca inclinata 45° con manubri', equipment: 'manubri', shoulder: 'caution' }
+          ],
+          note: 'Seduto con schienale, presa a martello (palmi che si guardano): riduce il conflitto subacromiale. Non scendere sotto l\'altezza del mento. Carico per singolo manubrio.'
         },
         {
           id: 'hip-thrust',
           name: 'Hip thrust',
           group: 'gambe',
           equipment: 'bilanciere',
-          sets: 3, reps: '10-12', restSec: 120,
+          sets: 2, reps: '10-12', restSec: 105,
           shoulder: 'safe',
-          alt: { id: 'glute-bridge', name: 'Glute bridge con manubrio', equipment: 'manubri' },
+          alts: [
+            { id: 'glute-bridge', name: 'Glute bridge con manubrio', equipment: 'manubri' }
+          ],
           note: 'Pausa di 1 secondo in chiusura, mento verso il petto.'
         },
         {
@@ -271,9 +342,11 @@
           name: 'Pushdown ai cavi',
           group: 'braccia',
           equipment: 'cavi',
-          sets: 3, reps: '12', restSec: 90,
+          sets: 2, reps: '12', restSec: 60,
           shoulder: 'safe',
-          alt: { id: 'french-press', name: 'French press con manubri', equipment: 'manubri' },
+          alts: [
+            { id: 'french-press', name: 'French press con manubri', equipment: 'manubri' }
+          ],
           note: 'Gomiti fermi al fianco.'
         },
         {
@@ -281,19 +354,23 @@
           name: 'Curl a martello',
           group: 'braccia',
           equipment: 'manubri',
-          sets: 3, reps: '12', restSec: 90,
+          sets: 2, reps: '12', restSec: 60,
           shoulder: 'safe',
-          alt: { id: 'curl-martello-cavi', name: 'Curl a martello ai cavi con corda', equipment: 'cavi' },
-          note: 'Registra il carico del singolo manubrio.'
+          alts: [
+            { id: 'curl-martello-cavi', name: 'Curl a martello ai cavi con corda', equipment: 'cavi' }
+          ],
+          note: 'Carico del singolo manubrio.'
         },
         {
           id: 'alzate-cavo',
           name: 'Alzate laterali ai cavi',
           group: 'spalle',
           equipment: 'cavi',
-          sets: 2, reps: '15', restSec: 60,
+          sets: 2, reps: '15', restSec: 45,
           shoulder: 'caution',
-          alt: { id: 'alzate-laterali', name: 'Alzate laterali con manubri' },
+          alts: [
+            { id: 'alzate-laterali', name: 'Alzate laterali con manubri' }
+          ],
           note: 'Il cavo tiene la tensione costante e permette carichi molto bassi: più gentile del manubrio sul destro.'
         },
         {
@@ -301,9 +378,11 @@
           name: 'Hollow hold',
           group: 'core',
           equipment: 'corpo libero',
-          sets: 3, reps: '30 secondi', restSec: 60,
+          sets: 2, reps: '30 secondi', restSec: 45,
           shoulder: 'safe',
-          alt: { id: 'dead-bug', name: 'Dead bug', equipment: 'corpo libero' },
+          alts: [
+            { id: 'dead-bug', name: 'Dead bug', equipment: 'corpo libero' }
+          ],
           note: 'Registra i secondi nel campo ripetizioni e lascia il carico a 0.'
         }
       ]
@@ -314,22 +393,15 @@
 
   var PROGRESSION = [
     'Doppia progressione: resta sullo stesso carico finché non chiudi tutte le serie al limite alto del range di ripetizioni.',
+    'Il limite alto vale per tutte le serie, non solo per la prima. Se la terza cala sempre, sei partito troppo pesante.',
     'Quando ci riesci, aumenta del 2,5-5% (il salto più piccolo disponibile) e riparti dal limite basso del range.',
     'Chiudi ogni serie con 1-2 ripetizioni ancora in canna. In fase di ripresa non serve arrivare a cedimento.',
-    'Prime due settimane: 2 serie invece di 3 e carichi volutamente conservativi, servono a ritrovare i movimenti.',
-    "Sugli esercizi marcati «occhio alla spalla», se il fastidio supera 3 su 10 fermati e passa all'alternativa indicata."
+    'Attrezzi diversi hanno storici diversi: scegli quello giusto dal selettore invece di registrare tutto sotto lo stesso nome, altrimenti i grafici diventano inutilizzabili.',
+    'Sugli esercizi marcati «occhio alla spalla», se il fastidio supera 3 su 10 fermati e passa a un\'alternativa.'
   ];
 
-  /* Indice di tutti i movimenti registrabili.
-   *
-   * Un'alternativa è un esercizio a tutti gli effetti, con un id proprio: fare
-   * leg press al posto del goblet squat deve produrre uno storico separato, non
-   * carichi da leg press attribuiti al goblet squat.
-   *
-   * Quando l'id di un'alternativa coincide con un esercizio già presente nella
-   * scheda (il pulley è alternativa del rematore in A ed esercizio principale
-   * in B) vince la definizione principale: è lo stesso movimento, quindi è
-   * giusto che le due storie confluiscano. */
+  /* Indice di tutti i movimenti registrabili: esercizi della scheda più le
+   * alternative che non compaiono già come principali altrove. */
   var INDEX = {};
 
   WORKOUTS.forEach(function (w) {
@@ -338,21 +410,23 @@
 
   WORKOUTS.forEach(function (w) {
     w.exercises.forEach(function (ex) {
-      var alt = ex.alt;
-      if (INDEX[alt.id]) return;
-      INDEX[alt.id] = {
-        id: alt.id,
-        name: alt.name,
-        group: ex.group,
-        equipment: alt.equipment || ex.equipment,
-        sets: ex.sets,
-        reps: ex.reps,
-        restSec: ex.restSec,
-        shoulder: alt.shoulder || 'safe',
-        note: alt.note || ex.note,
-        isAlt: true,
-        parentId: ex.id
-      };
+      ex.alts.forEach(function (alt) {
+        if (INDEX[alt.id]) return;
+        INDEX[alt.id] = {
+          id: alt.id,
+          name: alt.name,
+          group: ex.group,
+          equipment: alt.equipment || ex.equipment,
+          sets: ex.sets,
+          reps: ex.reps,
+          restSec: ex.restSec,
+          shoulder: alt.shoulder || 'safe',
+          note: alt.note || ex.note,
+          alts: [],
+          isAlt: true,
+          parentId: ex.id
+        };
+      });
     });
   });
 
@@ -372,16 +446,17 @@
     getExercise: function (id) {
       return INDEX[id] || null;
     },
-    // I due movimenti che si alternano nello stesso slot della scheda.
+    // Tutti i movimenti che possono occupare uno slot, principale in testa.
     variantsOf: function (primaryId) {
       var ex = INDEX[primaryId];
-      if (!ex || !ex.alt) return [primaryId];
-      return [primaryId, ex.alt.id];
+      if (!ex) return [primaryId];
+      return [primaryId].concat((ex.alts || []).map(function (a) { return a.id; }));
     },
-    // Dato l'id in uso, l'altro dei due.
+    // Prossimo della lista, a giro: serve solo quando non si indica un bersaglio.
     otherVariant: function (primaryId, currentId) {
       var v = this.variantsOf(primaryId);
-      return currentId === v[0] ? (v[1] || v[0]) : v[0];
+      var i = v.indexOf(currentId);
+      return v[(i + 1) % v.length];
     },
     allExercises: function () {
       return Object.keys(INDEX).map(function (id) { return INDEX[id]; });

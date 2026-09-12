@@ -35,11 +35,14 @@ dell'ultima volta: se ripeti gli stessi numeri devi solo spuntare la serie.
 Puoi aggiungere o togliere serie al volo. Se chiudi il browser a metà
 allenamento, la sessione resta aperta e la ritrovi dov'eri.
 
-Ogni esercizio ha un'alternativa, e le due possibilità sono sempre entrambe
-visibili con quella in corso evidenziata: si vede a colpo d'occhio se stai
-facendo il goblet squat o la leg press. Le due varianti hanno storici separati
-— la leg press non finisce nei progressi del goblet squat — e la seduta
-successiva riparte dalla variante che hai svolto l'ultima volta.
+Ogni slot della scheda elenca gli attrezzi con cui puoi svolgerlo, tutti
+visibili insieme con quello in corso evidenziato: si vede a colpo d'occhio se
+stai facendo il goblet squat, la leg press o l'hack squat. Ogni attrezzo ha uno
+storico separato — la shoulder press a macchina non finisce nei progressi del
+lento con manubri, e i loro carichi non sono confrontabili — e la seduta
+successiva riparte da quello che hai usato l'ultima volta.
+
+Una serie spuntata con 0 ripetizioni vale "saltato" e non viene archiviata.
 
 Una sessione già archiviata si corregge da **Storico → Correggi**: carichi,
 ripetizioni, note, unità di misura e quale delle due varianti hai davvero
@@ -55,6 +58,9 @@ corpo, quindi saltare un giorno non significa perdere un gruppo muscolare.
 - **A** — spinta orizzontale e quadricipiti
 - **B** — catena posteriore e tirata
 - **C** — gambe bilaterale e spinta verticale
+
+Le tre sedute hanno lo stesso peso: 22-23 serie l'una, circa un'ora. Il lavoro
+di cuffia sta in apertura, dove viene fatto davvero, e non in fondo.
 
 Ogni seduta si apre con lo stesso riscaldamento e si chiude con 10-15 minuti di
 camminata sul tapis roulant.

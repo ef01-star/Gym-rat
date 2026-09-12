@@ -396,7 +396,8 @@ table.sets td { padding: .18rem .18rem .18rem 0; }
    il plank o il dead bug. */
 .variant {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Uno slot può avere più di due attrezzi: le opzioni vanno a capo da sole. */
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   gap: .3rem;
   margin: .8rem 0 .2rem;
   padding: .25rem;

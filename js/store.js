@@ -9,7 +9,7 @@
 
   var KEY = 'gymrat.v1';
 
-  var VERSION = 2;
+  var VERSION = 3;
 
   var EMPTY = {
     version: VERSION,
@@ -37,8 +37,8 @@
     Object.keys(session.swaps).forEach(function (primaryId) {
       if (!session.swaps[primaryId]) return;
       var ex = global.GymData.getExercise(primaryId);
-      if (!ex || !ex.alt) return;
-      var altId = ex.alt.id;
+      if (!ex || !ex.alts || !ex.alts.length) return;
+      var altId = ex.alts[0].id;
       variant[primaryId] = altId;
       if (session.entries[primaryId] && !session.entries[altId]) {
         session.entries[altId] = session.entries[primaryId];
@@ -50,10 +50,37 @@
     return session;
   }
 
+  /* Versione 2 -> 3.
+   *
+   * Una serie con 0 ripetizioni non è una serie: veniva usata per dire
+   * "questo esercizio l'ho saltato", ma finiva archiviata come completata,
+   * gonfiando il conteggio delle serie e facendo comparire nei progressi
+   * esercizi mai svolti. Qui viene tolta, e con lei gli esercizi che non
+   * conservano nemmeno una serie valida. */
+  function dropEmptySets(session) {
+    if (!session || !session.entries) return session;
+    Object.keys(session.entries).forEach(function (exId) {
+      var kept = session.entries[exId].filter(function (set) {
+        return Number(set.reps) > 0;
+      });
+      if (kept.length) {
+        session.entries[exId] = kept;
+      } else {
+        delete session.entries[exId];
+      }
+    });
+    return session;
+  }
+
   function migrate(s) {
     if (s.version === VERSION) return s;
-    s.logs.forEach(migrateSession);
-    migrateSession(s.active);
+    if (!s.version || s.version < 2) {
+      s.logs.forEach(migrateSession);
+      migrateSession(s.active);
+    }
+    if (s.version < 3) {
+      s.logs.forEach(dropEmptySets);
+    }
     if (!s.settings.preferredVariant) s.settings.preferredVariant = {};
     s.version = VERSION;
     return s;
@@ -165,7 +192,8 @@
     workout.exercises.forEach(function (ex) {
       // Se l'ultima volta hai fatto l'alternativa, la seduta riparte da quella.
       var preferred = s.settings.preferredVariant[ex.id];
-      var activeId = (preferred === ex.alt.id) ? preferred : ex.id;
+      var variants = global.GymData.variantsOf(ex.id);
+      var activeId = variants.indexOf(preferred) > -1 ? preferred : ex.id;
       variant[ex.id] = activeId;
       entries[activeId] = blankRows(activeId);
     });
@@ -182,8 +210,8 @@
     return s.active;
   }
 
-  // Passa all'altra variante dello slot. Le righe già compilate della variante
-  // che lasci restano in memoria, così tornare indietro non perde nulla.
+  // Passa a un'altra variante dello slot. Le righe già compilate di quella che
+  // lasci restano in memoria, così tornare indietro non perde nulla.
   function swapSlot(primaryId, targetId) {
     var s = load();
     if (!s.active) return null;
@@ -219,8 +247,10 @@
       var activeId = activeVariant(s.active, ex.id);
       variant[ex.id] = activeId;
       var rows = s.active.entries[activeId] || [];
+      // Una serie spuntata ma con 0 ripetizioni significa "saltato": non va
+      // archiviata come lavoro svolto.
       var done = rows.filter(function (r) {
-        return r.done && r.reps !== '' && r.reps !== null;
+        return r.done && Number(r.reps) > 0;
       }).map(function (r) {
         return { weight: Number(r.weight) || 0, reps: Number(r.reps) || 0, done: true };
       });

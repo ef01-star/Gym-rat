@@ -533,7 +533,7 @@
         return '<tr>' +
           '<td><strong>' + esc(ex.name) + '</strong>' + shoulderBadge(ex) +
           '<span class="prog-note">' + esc(ex.note) + '</span>' +
-          '<span class="prog-alt">Alternativa: ' + esc(ex.alt) + '</span></td>' +
+          '<span class="prog-alt">Oppure: ' + esc(ex.alts.map(function (a) { return a.name; }).join(' · ')) + '</span></td>' +
           '<td class="nowrap">' + ex.sets + ' × ' + esc(ex.reps) + '</td>' +
           '<td class="nowrap">' + fmtRest(ex.restSec) + '</td>' +
           '</tr>';
