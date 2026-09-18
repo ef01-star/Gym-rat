@@ -9,7 +9,7 @@
 
   var KEY = 'gymrat.v1';
 
-  var VERSION = 3;
+  var VERSION = 4;
 
   var EMPTY = {
     version: VERSION,
@@ -72,6 +72,22 @@
     return session;
   }
 
+  /* Versione 3 -> 4.
+   *
+   * Lo storico teneva solo l'id della scheda, e il nome veniva riletto dal
+   * programma corrente: cambiando scheda, le sedute vecchie si ritrovavano
+   * etichettate con quella nuova. Ora ogni seduta archivia il nome e il focus
+   * che aveva al momento in cui è stata svolta. */
+  function stampWorkout(log) {
+    if (log.workoutName) return log;
+    var w = global.GymData.getWorkout(log.workoutId);
+    if (w) {
+      log.workoutName = w.name;
+      log.workoutFocus = w.focus;
+    }
+    return log;
+  }
+
   function migrate(s) {
     if (s.version === VERSION) return s;
     if (!s.version || s.version < 2) {
@@ -80,6 +96,9 @@
     }
     if (s.version < 3) {
       s.logs.forEach(dropEmptySets);
+    }
+    if (s.version < 4) {
+      s.logs.forEach(stampWorkout);
     }
     if (!s.settings.preferredVariant) s.settings.preferredVariant = {};
     s.version = VERSION;
@@ -266,6 +285,8 @@
     var log = {
       id: 'log-' + Date.now(),
       workoutId: s.active.workoutId,
+      workoutName: workout.name,
+      workoutFocus: workout.focus,
       startedAt: s.active.startedAt,
       endedAt: new Date().toISOString(),
       unit: s.active.unit || s.settings.unit || 'kg',
@@ -423,7 +444,7 @@
 
   // Quale sessione tocca: quella meno recente fra A, B e C.
   function nextWorkoutId() {
-    var order = ['A', 'B', 'C'];
+    var order = global.GymData.workouts.map(function (w) { return w.id; });
     var lastSeen = {};
     load().logs.forEach(function (log, i) { lastSeen[log.workoutId] = i; });
     var best = null, bestIdx = Infinity;

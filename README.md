@@ -51,34 +51,32 @@ doverle ridigitare, e finché non premi Salva lo storico resta com'era.
 
 ## Il programma
 
-Full body A/B/C, tre sedute a settimana con almeno un giorno di stacco fra una e
-l'altra (per esempio lunedì, mercoledì, venerdì). Ogni seduta tocca tutto il
-corpo, quindi saltare un giorno non significa perdere un gruppo muscolare.
+Upper / Lower / Upper, tre sedute a settimana con almeno un giorno di stacco
+fra una e l'altra. Obiettivo ricomposizione: densità alta, recuperi corti sui
+complementari, coppie in superserie, ripetizioni fra 8 e 15.
 
-- **A** — spinta orizzontale e quadricipiti
-- **B** — catena posteriore e tirata
-- **C** — gambe bilaterale e spinta verticale
+- **U1 — Alta, spinta**: panca con bilanciere, rematore con appoggio, lat,
+  shoulder press, alzate e braccia in superserie
+- **L — Bassa**: squat, stacco rumeno, leg press, leg curl, hip thrust e calf
+  in superserie
+- **U2 — Alta, tirata**: pulley, panca inclinata, lat supina, chest press,
+  rematore e braccia in superserie
 
-Le tre sedute hanno lo stesso peso: 22-23 serie l'una, circa un'ora. Il lavoro
-di cuffia sta in apertura, dove viene fatto davvero, e non in fondo.
+Ogni seduta alta si apre con il lavoro di cuffia e scapole, che messo in fondo
+non veniva mai fatto. Le sedute pesano 20-26 serie l'una, circa un'ora, e si
+chiudono con 10-15 minuti di camminata più mobilità cervicale e toracica.
 
-Ogni seduta si apre con lo stesso riscaldamento e si chiude con 10-15 minuti di
-camminata sul tapis roulant.
+La selezione tiene conto di due cose. La **spalla destra** operata alla cuffia
+dei rotatori e al sottospinato, che non dà più fastidio: il bilanciere è
+tornato sulla spinta orizzontale, ma la spinta verticale resta guidata o a
+presa neutra e non compare nulla dietro la nuca. E le **fitte fra le scapole**
+da lavoro al computer: Y raise in apertura per i trapezi bassi, tirata pesante
+con appoggio al petto invece che con il bilanciere libero, face pull, e
+mobilità cervicale nel defaticamento.
 
-La selezione degli esercizi tiene conto di una spalla destra operata alla cuffia
-dei rotatori e al sottospinato: le spinte partono da manubri e cavi, il lento
-avanti si esegue a presa neutra e senza scendere sotto il mento, le alzate
-laterali si fermano all'altezza della spalla e non compare nulla dietro la nuca.
-Il bilanciere resta solo su squat e hip thrust, entrambi con un'alternativa
-pronta. In ogni riscaldamento c'è lavoro di cuffia, più face pull o
-extrarotazioni dentro due sedute su tre.
-
-Gli esercizi da valutare seduta per seduta sono marcati *occhio alla spalla*
-nella scheda. Resta comunque una scheda generalista: eventuali indicazioni del
-fisioterapista che ha seguito il post-operatorio vengono prima.
-
-La progressione è a doppia progressione: stesso carico finché non chiudi tutte
-le serie al limite alto del range, poi +2,5-5% e si riparte dal limite basso.
+Le schede precedenti restano riconoscibili nello storico: ogni seduta archivia
+il nome del programma con cui è stata svolta, quindi cambiare scheda non
+rietichetta il passato, e le sedute vecchie restano correggibili.
 
 ## I dati
 

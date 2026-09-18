@@ -271,10 +271,15 @@ a { color: var(--accent); }
   border-radius: 8px;
   color: #fff;
   font-weight: 700;
-  font-size: .82rem;
+  font-size: .75rem;
   flex: none;
 }
 
+/* Schede correnti */
+.pill-U1 { background: var(--pill-a); }
+.pill-L  { background: var(--pill-b); }
+.pill-U2 { background: var(--pill-c); }
+/* Schede archiviate, ancora presenti nello storico */
 .pill-A { background: var(--pill-a); }
 .pill-B { background: var(--pill-b); }
 .pill-C { background: var(--pill-c); }
@@ -293,6 +298,7 @@ a { color: var(--accent); }
 
 .badge-warn { background: var(--warn-bg); color: var(--warn-text); }
 .badge-rehab { background: var(--rehab-bg); color: var(--rehab-text); }
+.badge-ss { background: var(--surface-2); color: var(--accent); }
 
 /* ---------- sessione dal vivo ---------- */
 

@@ -55,6 +55,15 @@
   // Unità attualmente in uso: 'kg' oppure 'lb'.
   function unit() { return S.unit(); }
 
+  // Coppie da alternare senza recupero in mezzo: il nome del compagno serve a
+  // capire con cosa, senza dover rileggere la nota.
+  function supersetBadge(slot) {
+    if (!slot.supersetWith) return '';
+    var other = D.getExercise(slot.supersetWith);
+    return '<span class="badge badge-ss">in superserie con ' +
+      esc(other ? other.name : slot.supersetWith) + '</span>';
+  }
+
   /* ---------- vista: dashboard ---------- */
 
   function renderDashboard() {
@@ -92,11 +101,10 @@
         '</div>';
 
     var recent = logs.slice(-3).reverse().map(function (log) {
-      var w = D.getWorkout(log.workoutId);
       var dur = S.durationMin(log);
       return '<li>' +
         '<span class="pill pill-' + esc(log.workoutId) + '">' + esc(log.workoutId) + '</span>' +
-        '<span class="recent-main"><strong>' + esc(w ? w.focus : log.workoutId) + '</strong>' +
+        '<span class="recent-main"><strong>' + esc(logFocus(log)) + '</strong>' +
         '<span class="muted">' + esc(fmtDateLong(log.endedAt || log.startedAt)) + '</span></span>' +
         '<span class="recent-meta">' + C.format(S.volumeOfLog(log)) + ' ' + unit() +
         (dur ? ' · ' + dur + "'" : '') + '</span>' +
@@ -118,7 +126,15 @@
       (recent
         ? '<section class="card"><h3>Ultime sessioni</h3><ul class="recent">' + recent + '</ul></section>'
         : '<section class="card empty-state"><h3>Non hai ancora registrato nulla</h3>' +
-          '<p>Apri <a href="#/programma">Programma</a> per vedere com\'è strutturata la scheda, oppure parti direttamente con la Sessione A.</p></section>');
+          '<p>Apri <a href="#/programma">Programma</a> per vedere com\'è strutturata la scheda, oppure parti direttamente dalla prima seduta.</p></section>');
+  }
+
+  // Il focus con cui la seduta è stata svolta, non quello della scheda di oggi:
+  // cambiando programma le sedute vecchie non vanno rietichettate.
+  function logFocus(log) {
+    if (log.workoutFocus) return log.workoutFocus;
+    var w = D.getWorkout(log.workoutId);
+    return w ? w.focus : log.workoutId;
   }
 
   function stat(label, value) {
@@ -206,6 +222,7 @@
               '<span class="badge">' + esc(ex.group) + '</span>' +
               '<span class="badge">' + esc(ex.equipment) + '</span>' +
               shoulderBadge(ex) +
+              supersetBadge(slot) +
             '</p>' +
           '</div>' +
           '<span class="progress-count" data-count="' + esc(activeId) + '">' + doneCount + '/' + rows.length + '</span>' +
@@ -252,6 +269,19 @@
   // Annulla riporta davvero la sessione com'era.
   var editDraft = null;
 
+  /* Gli slot modificabili di una seduta archiviata.
+   *
+   * Se la scheda con cui è stata svolta non è più attiva, il programma non ne
+   * conosce più l'elenco esercizi: gli slot sono allora quelli che la seduta
+   * contiene davvero, ognuno con le sue alternative. Senza questo, cambiando
+   * scheda le sedute vecchie diventavano incorreggibili. */
+  function editorSlots(log, workout) {
+    if (workout && workout.exercises && workout.exercises.length) {
+      return workout.exercises.map(function (ex) { return ex.id; });
+    }
+    return Object.keys(log.entries);
+  }
+
   function startEditing(logId) {
     var log = S.getLog(logId);
     if (!log) return;
@@ -260,11 +290,13 @@
       logId: logId,
       unit: S.logUnit(log),
       note: log.note || '',
+      slots: editorSlots(log, workout),
       variant: {},
       entries: {}
     };
 
-    workout.exercises.forEach(function (slot) {
+    draft.slots.forEach(function (slotId) {
+      var slot = D.getExercise(slotId) || { id: slotId, sets: 3 };
       var variants = D.variantsOf(slot.id);
       // La variante svolta si deduce da dove stanno davvero le serie: è più
       // affidabile del campo `variant`, che nelle sessioni vecchie può mancare
@@ -295,13 +327,12 @@
 
   function saveEditing() {
     var log = S.getLog(editDraft.logId);
-    var workout = D.getWorkout(log.workoutId);
     var entries = {};
     var variant = {};
 
-    workout.exercises.forEach(function (slot) {
-      var vid = editDraft.variant[slot.id];
-      variant[slot.id] = vid;
+    editDraft.slots.forEach(function (slotId) {
+      var vid = editDraft.variant[slotId];
+      variant[slotId] = vid;
       var rows = (editDraft.entries[vid] || []).filter(function (r) {
         return r.reps !== '' && r.reps !== null && Number(r.reps) > 0;
       }).map(function (r) {
@@ -331,16 +362,16 @@
     var workout = D.getWorkout(log.workoutId);
     var u = editDraft.unit;
 
-    var slots = workout.exercises.map(function (slot) {
-      var activeId = editDraft.variant[slot.id];
-      var ex = D.getExercise(activeId);
+    var slots = editDraft.slots.map(function (slotId) {
+      var activeId = editDraft.variant[slotId];
+      var ex = D.getExercise(activeId) || { id: activeId, name: activeId, group: '—', equipment: '—' };
       var rows = editDraft.entries[activeId] || [];
 
-      var picker = D.variantsOf(slot.id).map(function (vid) {
-        var v = D.getExercise(vid);
+      var picker = D.variantsOf(slotId).map(function (vid) {
+        var v = D.getExercise(vid) || { name: vid };
         var on = vid === activeId;
         return '<button class="variant-opt' + (on ? ' is-on' : '') + '" data-action="edit-variant" ' +
-          'data-primary="' + esc(slot.id) + '" data-variant="' + esc(vid) + '" ' +
+          'data-primary="' + esc(slotId) + '" data-variant="' + esc(vid) + '" ' +
           'aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(v.name) + '</button>';
       }).join('');
 
@@ -373,7 +404,7 @@
     }).join('');
 
     return '<h2 class="view-title">Correggi la sessione</h2>' +
-      '<p class="view-sub">' + esc(workout.name) + ' · ' +
+      '<p class="view-sub">' + esc(log.workoutName || workout.name) + ' · ' +
       esc(fmtDateLong(log.endedAt || log.startedAt)) + '</p>' +
 
       '<section class="card">' +
@@ -412,7 +443,6 @@
     }
 
     var items = logs.map(function (log) {
-      var w = D.getWorkout(log.workoutId);
       var dur = S.durationMin(log);
       // Le serie si mostrano come le hai registrate, nell'unità di allora: il
       // totale in cima è invece convertito, per poter confrontare le sedute.
@@ -430,6 +460,7 @@
         '<summary>' +
           '<span class="pill pill-' + esc(log.workoutId) + '">' + esc(log.workoutId) + '</span>' +
           '<span class="hist-main"><strong>' + esc(fmtDateLong(log.endedAt || log.startedAt)) + '</strong>' +
+          '<span class="muted">' + esc(logFocus(log)) + '</span>' +
           '<span class="muted">' + C.format(S.volumeOfLog(log)) + ' ' + unit() + ' · ' + S.setsOfLog(log) + ' serie' +
           (dur ? ' · ' + dur + ' min' : '') + '</span></span>' +
         '</summary>' +
@@ -531,7 +562,7 @@
     var workouts = D.workouts.map(function (w) {
       var rows = w.exercises.map(function (ex) {
         return '<tr>' +
-          '<td><strong>' + esc(ex.name) + '</strong>' + shoulderBadge(ex) +
+          '<td><strong>' + esc(ex.name) + '</strong>' + shoulderBadge(ex) + supersetBadge(ex) +
           '<span class="prog-note">' + esc(ex.note) + '</span>' +
           '<span class="prog-alt">Oppure: ' + esc(ex.alts.map(function (a) { return a.name; }).join(' · ')) + '</span></td>' +
           '<td class="nowrap">' + ex.sets + ' × ' + esc(ex.reps) + '</td>' +
@@ -554,15 +585,29 @@
 
       '<section class="card callout">' +
         '<h3>Spalla destra</h3>' +
-        '<p>La scheda è costruita attorno alla cuffia operata. Le spinte partono dai manubri e dai cavi, ' +
-        'il lento avanti si fa a presa neutra e senza scendere sotto il mento, le alzate laterali si fermano ' +
-        'all\'altezza della spalla, e non compare nulla dietro la nuca. In ogni riscaldamento c\'è lavoro di ' +
-        'cuffia, più face pull o extrarotazioni dentro due sedute su tre.</p>' +
-        '<p>Il bilanciere resta solo dove serve davvero (squat e hip thrust) e in entrambi i casi c\'è ' +
-        'un\'alternativa a un tap di distanza. Gli esercizi segnati <span class="badge badge-warn">occhio alla spalla</span> ' +
-        'sono quelli da valutare seduta per seduta.</p>' +
-        '<p class="muted">Resta una scheda generalista: se il fisioterapista che ti ha seguito dopo ' +
-        'l\'operazione ti ha dato indicazioni diverse, valgono le sue.</p>' +
+        '<p>La cuffia operata non dà più fastidio da agosto, quindi il bilanciere torna sulla spinta ' +
+        'orizzontale e le alzate laterali arrivano all\'altezza della spalla. Restano le cose che ' +
+        'hanno funzionato: lavoro di cuffia in apertura di ogni seduta alta, spinta verticale guidata ' +
+        'o a presa neutra, niente dietro la nuca. Gli esercizi segnati ' +
+        '<span class="badge badge-warn">occhio alla spalla</span> sono quelli da valutare seduta per seduta: ' +
+        'se il fastidio torna, ogni slot ha un\'alternativa a un tap di distanza.</p>' +
+      '</section>' +
+
+      '<section class="card callout">' +
+        '<h3>Scapole, trapezi e lavoro al computer</h3>' +
+        '<p>Stare al computer tiene i trapezi alti contratti e i trapezi bassi spenti: è il quadro ' +
+        'tipico delle fitte fra le scapole. La scheda lo affronta in tre punti. Le ' +
+        '<strong>Y raise</strong> aprono la seduta di spinta e riattivano i trapezi bassi. La tirata ' +
+        'orizzontale pesante si fa con l\'<strong>appoggio al petto</strong> invece che con il bilanciere ' +
+        'libero, perché reggere il busto flesso sotto carico è proprio ciò che affatica quella zona. ' +
+        'Il <strong>face pull</strong> apre la seduta di tirata.</p>' +
+        '<p>Nel defaticamento ci sono chin tuck ed estensione toracica: contro le fitte servono più ' +
+        'della palestra, ma vanno fatti spesso, non solo in palestra.</p>' +
+        '<p class="muted">Una cosa da dire chiaramente: fitte ricorrenti e la sensazione di dover ' +
+        'scrocchiare il collo per sbloccarlo non sono un problema che si risolve allenandosi di più, ' +
+        'e scrocchiare dà sollievo per minuti senza cambiare la causa. Se continua, falla vedere a un ' +
+        'fisioterapista: sono cose che si sistemano in fretta se prese per tempo. Nel frattempo, ' +
+        'alzati dalla scrivania ogni ora e fai 10 band pull-apart.</p>' +
       '</section>' +
 
       '<section class="card">' +
@@ -777,7 +822,7 @@
         var carried = editDraft.entries[previous];
         editDraft.entries[target] = carried && carried.length
           ? carried.map(function (r) { return { weight: r.weight, reps: r.reps }; })
-          : emptyRows(D.getExercise(slotId).sets);
+          : emptyRows((D.getExercise(slotId) || { sets: 3 }).sets);
       }
       render();
       return;
