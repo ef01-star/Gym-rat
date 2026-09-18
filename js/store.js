@@ -157,10 +157,12 @@
       if (sets && sets.length) {
         var from = logUnit(logs[i]);
         var done = sets.filter(function (s) { return s.done; }).map(function (s) {
-          return {
-            weight: s.weight ? roundLoad(convert(s.weight, from, to), to) : 0,
-            reps: s.reps
-          };
+          // L'arrotondamento serve solo quando si converte davvero fra unità:
+          // applicarlo a parità di unità storpiava i carichi scritti a mano
+          // (88 lb proposti come 87,5, uno stack da 44 come 45).
+          var w = Number(s.weight) || 0;
+          if (w && from !== to) w = roundLoad(convert(w, from, to), to);
+          return { weight: w, reps: s.reps };
         });
         if (done.length) {
           return { date: logs[i].endedAt || logs[i].startedAt, sets: done, unit: to };
