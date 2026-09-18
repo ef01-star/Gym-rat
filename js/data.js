@@ -295,7 +295,8 @@
           sets: 3, reps: '8-12', restSec: 150,
           shoulder: 'caution',
           alts: [
-            { id: 'chest-press-inclinata', name: 'Chest press inclinata a macchina', equipment: 'macchine' }
+            { id: 'chest-press-inclinata', name: 'Chest press inclinata a macchina', equipment: 'macchine' },
+            { id: 'chest-press-inclinata-cavi', name: 'Chest press inclinata ai cavi dal basso', equipment: 'cavi' }
           ],
           note: 'Inclinazione bassa: 30° bastano, più si alza lo schienale più lavoro finisce sulla spalla. Carico per singolo manubrio.'
         },
