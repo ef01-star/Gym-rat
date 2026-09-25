@@ -55,12 +55,12 @@ Upper / Lower / Upper, tre sedute a settimana con almeno un giorno di stacco
 fra una e l'altra. Obiettivo ricomposizione: densità alta, recuperi corti sui
 complementari, coppie in superserie, ripetizioni fra 8 e 15.
 
-- **U1 — Alta, spinta**: panca con bilanciere, rematore con appoggio, lat,
-  shoulder press, alzate e braccia in superserie
-- **L — Bassa**: squat, stacco rumeno, leg press, leg curl, hip thrust e calf
+- **U1 — Alta, spinta**: panca, rematore con appoggio, lat, shoulder press,
+  alzate e braccia in superserie
+- **L — Bassa**: squat, stacco rumeno, leg press, leg curl, affondi e calf
   in superserie
-- **U2 — Alta, tirata**: pulley, panca inclinata, lat supina, chest press,
-  rematore e braccia in superserie
+- **U2 — Alta, tirata**: pulley, panca inclinata, lat supina, rematore e
+  braccia in superserie
 
 Ogni seduta alta si apre con il lavoro di cuffia e scapole, che messo in fondo
 non veniva mai fatto. Le sedute pesano 20-26 serie l'una, circa un'ora, e si

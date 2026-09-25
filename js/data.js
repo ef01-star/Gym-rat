@@ -51,7 +51,6 @@
           equipment: 'cavi',
           sets: 2, reps: '15 per lato', restSec: 45,
           shoulder: 'rehab',
-          supersetWith: 'y-raise',
           alts: [
             { id: 'extrarotazioni-elastico', name: 'Extrarotazioni con elastico', equipment: 'corpo libero', shoulder: 'rehab' }
           ],
@@ -64,7 +63,6 @@
           equipment: 'manubri',
           sets: 2, reps: '12', restSec: 45,
           shoulder: 'rehab',
-          supersetWith: 'extrarotazioni',
           alts: [
             { id: 'scapular-pull', name: 'Scapular pull-down alla lat machine', equipment: 'cavi' },
             { id: 'wall-slide', name: 'Wall slide al muro', equipment: 'corpo libero' }
@@ -231,17 +229,18 @@
           note: 'Fase negativa lenta, 3 secondi. In questa scheda è l\'unico lavoro isolato per i femorali: non saltarlo come facevi prima.'
         },
         {
-          id: 'hip-thrust',
-          name: 'Hip thrust',
+          id: 'affondi',
+          name: 'Affondi in camminata con manubri',
           group: 'gambe',
-          equipment: 'bilanciere',
-          sets: 3, reps: '10-12', restSec: 60,
+          equipment: 'manubri',
+          sets: 3, reps: '10 per gamba', restSec: 60,
           shoulder: 'safe',
           supersetWith: 'calf',
           alts: [
-            { id: 'glute-bridge', name: 'Glute bridge con manubrio', equipment: 'manubri' }
+            { id: 'split-squat-bulgaro', name: 'Split squat bulgaro', equipment: 'manubri' },
+            { id: 'hip-thrust', name: 'Hip thrust', equipment: 'bilanciere' }
           ],
-          note: 'Pausa di 1 secondo in chiusura, mento verso il petto. In superserie con il calf.'
+          note: 'Prende il posto dell\'hip thrust, che non hai mai fatto: né qui né nella scheda precedente, tre volte su tre. Gli affondi invece li facevi sempre. Manubri lungo i fianchi, braccia passive. In superserie con il calf. L\'hip thrust resta fra le alternative se ti va di riprenderlo.'
         },
         {
           id: 'calf',
@@ -250,12 +249,12 @@
           equipment: 'macchine',
           sets: 3, reps: '15', restSec: 60,
           shoulder: 'safe',
-          supersetWith: 'hip-thrust',
+          supersetWith: 'affondi',
           alts: [
             { id: 'calf-rack', name: 'Calf raise al rack con bilanciere', equipment: 'bilanciere', shoulder: 'caution' },
             { id: 'calf-manubrio', name: 'Calf raise in piedi con manubrio', equipment: 'manubri' }
           ],
-          note: 'Da seduto, ginocchia piegate: lavora soprattutto il soleo. Pausa di 1 secondo in alto e in basso.'
+          note: 'Da seduto, ginocchia piegate: lavora soprattutto il soleo. Pausa di 1 secondo in alto e in basso. In superserie con gli affondi.'
         },
         {
           id: 'plank',
@@ -310,9 +309,10 @@
           shoulder: 'caution',
           alts: [
             { id: 'chest-press-inclinata', name: 'Chest press inclinata a macchina', equipment: 'macchine' },
-            { id: 'chest-press-inclinata-cavi', name: 'Chest press inclinata ai cavi dal basso', equipment: 'cavi' }
+            { id: 'chest-press-inclinata-cavi', name: 'Chest press inclinata ai cavi dal basso', equipment: 'cavi' },
+            { id: 'chest-press-cavi', name: 'Chest press ai cavi', equipment: 'cavi', note: 'Registra il carico del singolo stack, non la somma dei due.' }
           ],
-          note: 'Inclinazione bassa, 30° bastano. Carico per singolo manubrio. Ai cavi dal basso i numeri sono più bassi e più graduabili della macchina: sono tre storici distinti, scegli quello giusto dal selettore.'
+          note: 'Unica spinta della seduta di tirata: due erano troppe e la seduta non stava nell\'ora. Inclinazione bassa, 30° bastano. Carico per singolo manubrio. Ai cavi dal basso i numeri sono più bassi e più graduabili della macchina: sono tre storici distinti, scegli quello giusto dal selettore.'
         },
         {
           id: 'lat-supina',
@@ -325,19 +325,6 @@
             { id: 'trazioni-assistite-supina', name: 'Trazioni assistite presa supina', equipment: 'macchine' }
           ],
           note: 'Presa alla larghezza delle spalle, tira verso la parte alta dell\'addome. I 121 del 16 settembre sono il nuovo punto di partenza affidabile.'
-        },
-        {
-          id: 'chest-press-cavi',
-          name: 'Chest press ai cavi',
-          group: 'petto',
-          equipment: 'cavi',
-          sets: 3, reps: '10-12', restSec: 90,
-          shoulder: 'caution',
-          alts: [
-            { id: 'panca-manubri', name: 'Panca piana con manubri', equipment: 'manubri' },
-            { id: 'chest-press-macchina', name: 'Chest press a macchina', equipment: 'macchine' }
-          ],
-          note: 'Registra il carico del singolo stack, non la somma dei due. Regola il sedile in modo che le mani partano all\'altezza dello sterno.'
         },
         {
           id: 'rematore-manubrio',
@@ -420,7 +407,7 @@
   var PROGRESSION = [
     'Doppia progressione: resta sullo stesso carico finché non chiudi tutte le serie al limite alto del range di ripetizioni.',
     'Il limite alto vale per tutte le serie, non solo per la prima. Se la terza cala sempre, sei partito troppo pesante.',
-    'Quando ci riesci, aumenta del 2,5-5% e riparti dal limite basso del range.',
+    'Quando ci riesci, aumenta del 2,5-5% e riparti dal limite basso del range. Il 21 e 22 settembre sei salito del 15-17% su panca, rematore e curl: sono saltate l\'ultima serie di entrambi i primi due, ed è esattamente quello che succede a raddoppiare il passo. Su 200 lb lo scatto giusto è 5-10, non 30.',
     'Chiudi ogni serie con 1-2 ripetizioni ancora in canna. La serie tirata a cedimento seguita da una in scarico ti allunga la seduta e non aggiunge niente: se vuoi usarla, tienila per l\'ultima serie dell\'ultimo esercizio.',
     'Nelle coppie in superserie non recuperi fra i due esercizi, solo alla fine della coppia: è lì che sta la densità che serve alla ricomposizione.',
     'Attrezzi diversi hanno storici diversi: scegli quello giusto dal selettore invece di registrare tutto sotto lo stesso nome.',
