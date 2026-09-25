@@ -309,10 +309,22 @@
           shoulder: 'caution',
           alts: [
             { id: 'chest-press-inclinata', name: 'Chest press inclinata a macchina', equipment: 'macchine' },
-            { id: 'chest-press-inclinata-cavi', name: 'Chest press inclinata ai cavi dal basso', equipment: 'cavi' },
-            { id: 'chest-press-cavi', name: 'Chest press ai cavi', equipment: 'cavi', note: 'Registra il carico del singolo stack, non la somma dei due.' }
+            { id: 'chest-press-inclinata-cavi', name: 'Chest press inclinata ai cavi dal basso', equipment: 'cavi' }
           ],
-          note: 'Unica spinta della seduta di tirata: due erano troppe e la seduta non stava nell\'ora. Inclinazione bassa, 30° bastano. Carico per singolo manubrio. Ai cavi dal basso i numeri sono più bassi e più graduabili della macchina: sono tre storici distinti, scegli quello giusto dal selettore.'
+          note: 'Inclinazione bassa, 30° bastano. Carico per singolo manubrio. Ai cavi dal basso i numeri sono più bassi e più graduabili della macchina: sono tre storici distinti, scegli quello giusto dal selettore.'
+        },
+        {
+          id: 'chest-press-cavi',
+          name: 'Chest press ai cavi',
+          group: 'petto',
+          equipment: 'cavi',
+          sets: 3, reps: '10-12', restSec: 90,
+          shoulder: 'caution',
+          alts: [
+            { id: 'panca-manubri', name: 'Panca piana con manubri', equipment: 'manubri' },
+            { id: 'chest-press-macchina', name: 'Chest press a macchina', equipment: 'macchine' }
+          ],
+          note: 'Registra il carico del singolo stack, non la somma dei due. Regola il sedile in modo che le mani partano all\'altezza dello sterno.'
         },
         {
           id: 'lat-supina',
