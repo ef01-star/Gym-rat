@@ -6,7 +6,9 @@
  *
  * La spalla destra operata (cuffia dei rotatori + sottospinato) non dà più
  * fastidio da agosto, quindi il bilanciere torna sulle spinte orizzontali e le
- * alzate laterali arrivano all'altezza della spalla. Restano il lavoro di
+ * alzate laterali arrivano all'altezza della spalla. A fine settembre è però
+ * comparso un fastidio alla spalla sinistra sulla spinta verticale: le note
+ * degli slot interessati valgono per entrambi i lati. Restano il lavoro di
  * cuffia in apertura di ogni seduta alta, la presa neutra o guidata sul
  * verticale, e niente dietro la nuca.
  *
@@ -93,7 +95,7 @@
             { id: 'rematore-tbar', name: 'Rematore a T-bar', equipment: 'bilanciere' },
             { id: 'rematore-bilanciere', name: 'Rematore con bilanciere', equipment: 'bilanciere' }
           ],
-          note: 'Con l\'appoggio al petto invece che con il bilanciere libero: tenere il busto flesso sotto carico è proprio ciò che affatica la zona fra le scapole, ed è l\'ultima cosa che ti serve con il lavoro al computer. Tira con le scapole, chiudi e tieni un istante. Sei a 200 × 10 su tutte e tre le serie: puoi salire.'
+          note: 'Con l\'appoggio al petto invece che con il bilanciere libero: tenere il busto flesso sotto carico è proprio ciò che affatica la zona fra le scapole, ed è l\'ultima cosa che ti serve con il lavoro al computer. Tira con le scapole, chiudi e tieni un istante. Resta su 230: hai chiuso tutte e tre le serie il 28 settembre ma con un po\' di slancio nelle ultime ripetizioni. Prima di aggiungere peso rifalle pulite, petto sempre in appoggio e niente strappo con la schiena. Poi si sale di 10 lb, non di 30.'
         },
         {
           id: 'lat-neutra',
@@ -119,7 +121,7 @@
             { id: 'lento-manubri-neutro', name: 'Lento avanti con manubri, presa neutra', equipment: 'manubri', shoulder: 'caution', note: 'Seduto con schienale, presa a martello. Carico del singolo manubrio: i tuoi 40 lb qui non si confrontano con i 140 della macchina.' },
             { id: 'panca-inclinata-45', name: 'Panca inclinata 45° con manubri', equipment: 'manubri', shoulder: 'caution' }
           ],
-          note: 'Traiettoria guidata e schienale: la spinta verticale più gentile per la spalla. Non scendere sotto l\'altezza del mento.'
+          note: 'Traiettoria guidata e schienale: la spinta verticale più gentile per le spalle. Non scendere sotto l\'altezza del mento. Il 28 settembre sei sceso da 140 a 110 per un fastidio alla spalla sinistra: hai fatto bene, e 110 × 10 su tutte e tre le serie è il punto da cui ripartire. Risali solo quando il fastidio è sparito del tutto, e di 10 lb per volta. Se torna, questo è lo slot da sostituire per primo: la panca inclinata a 45° carica molto meno la spalla.'
         },
         {
           id: 'alzate-laterali',

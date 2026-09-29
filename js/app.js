@@ -585,7 +585,10 @@
 
       '<section class="card callout">' +
         '<h3>Spalla destra</h3>' +
-        '<p>La cuffia operata non dà più fastidio da agosto, quindi il bilanciere torna sulla spinta ' +
+        '<p>A fine settembre è comparso un fastidio alla <strong>spalla sinistra</strong> sulla spinta ' +
+        'verticale, e hai fatto bene ad abbassare il carico invece di insistere. Le note degli esercizi ' +
+        'con il badge valgono da entrambi i lati, non solo a destra.</p>' +
+        '<p>La cuffia operata a destra non dà più fastidio da agosto, quindi il bilanciere torna sulla spinta ' +
         'orizzontale e le alzate laterali arrivano all\'altezza della spalla. Restano le cose che ' +
         'hanno funzionato: lavoro di cuffia in apertura di ogni seduta alta, spinta verticale guidata ' +
         'o a presa neutra, niente dietro la nuca. Gli esercizi segnati ' +
