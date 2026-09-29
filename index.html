@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Dashboard per la gestione degli allenamenti in palestra: scheda full body A/B/C, registro delle serie e grafici di progressione.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#101418">
+  <title>Gym-rat</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🏋️</text></svg>">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#/">
+      <span class="brand-mark" aria-hidden="true">GR</span>
+      <span class="brand-text">Gym-rat</span>
+    </a>
+    <a class="topbar-link" href="#/dati">Dati</a>
+  </header>
+
+  <main id="view" class="view"></main>
+
+  <nav class="nav" aria-label="Sezioni">
+    <a href="#/">Oggi</a>
+    <a href="#/allenamento" id="nav-training">Allenati</a>
+    <a href="#/storico">Storico</a>
+    <a href="#/progressi">Progressi</a>
+    <a href="#/programma">Programma</a>
+  </nav>
+
+  <script src="js/data.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
